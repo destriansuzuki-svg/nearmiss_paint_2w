@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safety Dashboard Pro - Painting 2W</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        [x-cloak] { display: none !important; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .modal-bg { background-color: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900" x-data="appData()" x-init="initApp()">
+
+    <div x-show="!isLoggedIn" class="fixed inset-0 bg-[#0f172a] flex items-center justify-center z-[100] px-4">
+        <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md text-center">
+            <div class="inline-flex p-4 bg-blue-50 rounded-2xl mb-4 text-blue-600">
+                <i data-lucide="shield-check" class="w-10 h-10"></i>
+            </div>
+            <h2 class="text-3xl font-black text-slate-800 tracking-tight">PAINTING 2W</h2>
+            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-2 mb-8">Safety System</p>
+            <div class="space-y-4">
+                <input type="text" x-model="loginForm.user" placeholder="Username" class="w-full p-4 border-2 border-slate-100 rounded-2xl outline-blue-600 font-semibold text-center">
+                <input type="password" x-model="loginForm.pass" placeholder="Password" class="w-full p-4 border-2 border-slate-100 rounded-2xl outline-blue-600 font-semibold text-center">
+                <button @click="login()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 uppercase">Masuk</button>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="isLoggedIn" x-cloak class="flex h-screen w-full overflow-hidden">
+        <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-[#0f172a] text-white transition-all duration-300 flex flex-col z-50">
+            <div class="p-6 flex items-center justify-between border-b border-slate-800/50">
+                <h1 x-show="sidebarOpen" class="font-bold text-blue-400 tracking-tighter text-lg uppercase">Painting 2W</h1>
+                <button @click="toggleSidebar()" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <nav class="flex-1 px-3 mt-6 space-y-2">
+                <template x-for="m in menus" :key="m.id">
+                    <button @click="setPage(m.id)" 
+                        :class="page === m.id ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'" 
+                        class="flex items-center w-full p-3.5 rounded-xl transition-all group">
+                        <i :data-lucide="m.icon" class="w-5 h-5"></i>
+                        <span x-show="sidebarOpen" class="ml-4 font-semibold text-sm" x-text="m.name"></span>
+                    </button>
+                </template>
+            </nav>
+            <button @click="logout()" class="p-6 text-red-400 flex items-center gap-3 hover:bg-red-500/10 border-t border-slate-800/50 transition-all">
+                <i data-lucide="log-out" class="w-5 h-5"></i>
+                <span x-show="sidebarOpen" class="text-sm font-bold uppercase tracking-widest">Logout</span>
+            </button>
+        </aside>
+
+        <div class="flex-1 flex flex-col min-w-0 bg-slate-50 overflow-hidden">
+            <header class="bg-white border-b px-8 py-4 flex justify-between items-center z-40">
+                <h2 class="text-xl font-extrabold text-slate-800 uppercase tracking-tight flex items-center gap-3">
+                    <div class="w-2 h-6 bg-blue-600 rounded-full"></div>
+                    <span x-text="page.replace('-', ' ')"></span>
+                </h2>
+                <div class="flex items-center gap-4">
+                    <div class="bg-slate-50 p-1 rounded-xl border border-slate-100 flex items-center">
+                        <span class="px-3 text-[10px] font-black text-slate-400 uppercase">Periode:</span>
+                        <input type="month" x-model="filterMonth" @change="updateDashboard()" class="bg-transparent border-none rounded-lg px-2 py-1 text-sm font-bold text-slate-700 outline-none cursor-pointer">
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-6 lg:p-10">
+                <div x-show="page === 'dashboard'" class="space-y-8">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div @click="setPage('data-karyawan')" class="cursor-pointer group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:border-blue-500 transition-all">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-blue-500">Karyawan Aktif</p>
+                            <h4 class="text-4xl font-black text-slate-800 mt-2" x-text="karyawan.length"></h4>
+                        </div>
+                        <div @click="setPage('data-nearmiss', 'all')" class="cursor-pointer group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:border-blue-500 transition-all">
+                            <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Sudah Buat</p>
+                            <h4 class="text-4xl font-black text-blue-600 mt-2" x-text="stats.sudahBuat"></h4>
+                        </div>
+                        <div @click="setPage('data-karyawan')" class="cursor-pointer group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:border-orange-500 transition-all">
+                            <p class="text-[10px] font-black text-orange-500 uppercase tracking-widest">Belum Buat</p>
+                            <h4 class="text-4xl font-black text-orange-600 mt-2" x-text="karyawan.length - stats.sudahBuat"></h4>
+                        </div>
+                        <div @click="setPage('data-nearmiss', 'close')" class="cursor-pointer group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:border-green-500 transition-all">
+                            <p class="text-[10px] font-black text-green-500 uppercase tracking-widest">Nearmiss Close</p>
+                            <h4 class="text-4xl font-black text-green-600 mt-2" x-text="stats.close"></h4>
+                        </div>
+                        <div @click="setPage('data-nearmiss', 'open')" class="cursor-pointer group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:border-red-500 transition-all">
+                            <p class="text-[10px] font-black text-red-500 uppercase tracking-widest">Belum Close</p>
+                            <h4 class="text-4xl font-black text-red-600 mt-2" x-text="stats.open"></h4>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm min-h-[400px]">
+                            <h3 class="font-black text-slate-800 mb-6 flex items-center gap-2 uppercase text-xs tracking-widest">
+                                <i data-lucide="bar-chart-2" class="w-4 h-4 text-blue-600"></i> Tren Nearmiss Bulanan
+                            </h3>
+                            <div class="h-80"><canvas id="barChart"></canvas></div>
+                        </div>
+                        <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                            <h3 class="font-black text-slate-800 mb-6 flex items-center gap-2 uppercase text-xs tracking-widest">
+                                <i data-lucide="history" class="w-4 h-4 text-blue-600"></i> Log Aktivitas
+                            </h3>
+                            <div class="space-y-4">
+                                <template x-for="log in logs" :key="log.time + log.msg">
+                                    <div class="flex gap-4 items-start pb-4 border-b border-slate-50 last:border-0">
+                                        <div class="w-2 h-2 mt-1.5 rounded-full bg-blue-500 shrink-0"></div>
+                                        <div>
+                                            <p class="text-xs font-bold text-slate-700" x-text="log.msg"></p>
+                                            <p class="text-[10px] text-slate-400 mt-1" x-text="log.time"></p>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="page === 'data-karyawan'" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Daftar Anggota Painting 2W</p>
+                        <button @click="openModal('karyawan')" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all">+ Input Karyawan</button>
+                    </div>
+                    <div class="bg-white rounded-[2rem] border overflow-hidden shadow-sm">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-slate-50 text-slate-400 font-black uppercase text-[10px] tracking-widest">
+                                <tr>
+                                    <th class="p-5">No</th>
+                                    <th class="p-5">NIK</th>
+                                    <th class="p-5">Nama Karyawan</th>
+                                    <th class="p-5">Status Lapor</th>
+                                    <th class="p-5 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50 font-semibold">
+                                <template x-for="(k, index) in karyawan" :key="k.nik">
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-5 text-slate-400" x-text="index + 1"></td>
+                                        <td class="p-5 text-blue-600 font-bold" x-text="k.nik"></td>
+                                        <td class="p-5 text-slate-800" x-text="k.nama"></td>
+                                        <td class="p-5">
+                                            <span class="px-3 py-1 rounded-full text-[10px] bg-green-100 text-green-700" x-show="checkLapor(k.nik)">Sudah</span>
+                                            <span class="px-3 py-1 rounded-full text-[10px] bg-slate-100 text-slate-400" x-show="!checkLapor(k.nik)">Belum</span>
+                                        </td>
+                                        <td class="p-5 text-right space-x-2">
+                                            <button @click="editKaryawan(k)" class="text-blue-500 hover:text-blue-700 p-2 bg-blue-50 rounded-lg transition-colors"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                            <button @click="deleteKaryawan(k.nik)" class="text-red-500 hover:text-red-700 p-2 bg-red-50 rounded-lg transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div x-show="page === 'data-nearmiss'" class="space-y-4">
+                    <div class="bg-white p-4 rounded-2xl border flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
+                        <div class="flex gap-2">
+                            <button @click="currentFilter = 'all'" :class="currentFilter === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all">Semua</button>
+                            <button @click="currentFilter = 'open'" :class="currentFilter === 'open' ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-500'" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all">Pending</button>
+                            <button @click="currentFilter = 'close'" :class="currentFilter === 'close' ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-500'" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all">Closed</button>
+                        </div>
+                        <button @click="openModal('nearmiss')" class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all">+ Tambah Laporan</button>
+                    </div>
+
+                    <div class="bg-white rounded-[2.5rem] border overflow-x-auto shadow-sm">
+                        <table class="w-full text-[11px] text-left border-collapse min-w-[1300px]">
+                            <thead class="bg-slate-800 text-white font-bold uppercase tracking-wider">
+                                <tr>
+                                    <th class="p-4 border border-slate-700 text-center">No</th>
+                                    <th class="p-4 border border-slate-700">NIK</th>
+                                    <th class="p-4 border border-slate-700">Nama</th>
+                                    <th class="p-4 border border-slate-700">When</th>
+                                    <th class="p-4 border border-slate-700">Where</th>
+                                    <th class="p-4 border border-slate-700">Detail of Hiyari Hatto</th>
+                                    <th class="p-4 border border-slate-700">Countermeasure</th>
+                                    <th class="p-4 border border-slate-700">Target Date</th>
+                                    <th class="p-4 border border-slate-700 text-center">Status</th>
+                                    <th class="p-4 border border-slate-700 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <template x-for="(n, index) in filteredData" :key="n.id">
+                                    <tr class="hover:bg-blue-50/50 font-semibold">
+                                        <td class="p-4 border-r border-slate-100 text-center text-slate-400" x-text="index + 1"></td>
+                                        <td class="p-4 border-r border-slate-100 text-blue-600 font-bold" x-text="n.nik"></td>
+                                        <td class="p-4 border-r border-slate-100 text-slate-800 uppercase" x-text="n.nama"></td>
+                                        <td class="p-4 border-r border-slate-100" x-text="n.when"></td>
+                                        <td class="p-4 border-r border-slate-100" x-text="n.where"></td>
+                                        <td class="p-4 border-r border-slate-100 text-slate-600 italic" x-text="n.detail"></td>
+                                        <td class="p-4 border-r border-slate-100 text-green-700 font-bold" x-text="n.measure"></td>
+                                        <td class="p-4 border-r border-slate-100" x-text="n.targetDate"></td>
+                                        <td class="p-4 text-center border-r border-slate-100">
+                                            <span :class="n.note === 'Close' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'" 
+                                                  class="px-3 py-1 rounded-lg text-[9px] font-black uppercase" x-text="n.note"></span>
+                                        </td>
+                                        <td class="p-4 text-center space-x-1">
+                                            <button @click="editNearmiss(n)" class="text-blue-500 p-1.5 hover:bg-blue-50 rounded"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                            <button @click="deleteNearmiss(n.id)" class="text-red-500 p-1.5 hover:bg-red-50 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div x-show="showModalKaryawan" class="fixed inset-0 z-[110] flex items-center justify-center p-4 modal-bg" x-cloak>
+        <div class="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+            <h3 class="text-xl font-black mb-6" x-text="isEdit ? 'Edit Karyawan' : 'Tambah Karyawan'"></h3>
+            <div class="space-y-4">
+                <input type="text" x-model="formKaryawan.nik" placeholder="NIK (P2Wxxx)" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold">
+                <input type="text" x-model="formKaryawan.nama" placeholder="Nama Lengkap" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold">
+                <div class="flex gap-3 mt-6">
+                    <button @click="showModalKaryawan = false" class="flex-1 py-4 font-bold text-slate-400 hover:bg-slate-50 rounded-2xl">Batal</button>
+                    <button @click="saveKaryawan()" class="flex-1 py-4 bg-blue-600 text-white font-black rounded-2xl shadow-lg">SIMPAN</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="showModalNearmiss" class="fixed inset-0 z-[110] flex items-center justify-center p-4 modal-bg" x-cloak>
+        <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-black mb-6" x-text="isEdit ? 'Edit Laporan Nearmiss' : 'Tambah Laporan Nearmiss'"></h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-4">
+                    <label class="text-[10px] font-black uppercase text-slate-400">Pilih Karyawan</label>
+                    <select x-model="formNearmiss.nik" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold appearance-none">
+                        <option value="">- Pilih NIK -</option>
+                        <template x-for="k in karyawan">
+                            <option :value="k.nik" x-text="k.nik + ' - ' + k.nama"></option>
+                        </template>
+                    </select>
+                    <input type="date" x-model="formNearmiss.when" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold">
+                    <input type="text" x-model="formNearmiss.where" placeholder="Lokasi (Where)" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold">
+                </div>
+                <div class="space-y-4">
+                    <textarea x-model="formNearmiss.detail" placeholder="Detail Bahaya (Hiyari Hatto)" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold h-32"></textarea>
+                    <textarea x-model="formNearmiss.measure" placeholder="Tindakan (Countermeasure)" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold h-32"></textarea>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <input type="date" x-model="formNearmiss.targetDate" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold">
+                <select x-model="formNearmiss.note" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold">
+                    <option value="Belum Close">Belum Close</option>
+                    <option value="Close">Close</option>
+                </select>
+            </div>
+            <div class="flex gap-3 mt-8">
+                <button @click="showModalNearmiss = false" class="flex-1 py-4 font-bold text-slate-400">BATAL</button>
+                <button @click="saveNearmiss()" class="flex-1 py-4 bg-blue-600 text-white font-black rounded-2xl shadow-lg">SIMPAN LAPORAN</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function appData() {
+        return {
+            isLoggedIn: false,
+            sidebarOpen: true,
+            page: 'dashboard',
+            currentFilter: 'all',
+            isEdit: false,
+            oldNik: null, // Digunakan untuk referensi saat update NIK
+            showModalKaryawan: false,
+            showModalNearmiss: false,
+            filterMonth: new Date().toISOString().slice(0, 7),
+            loginForm: { user: '', pass: '' },
+            formKaryawan: { nik: '', nama: '' },
+            formNearmiss: { id: null, nik: '', nama: '', when: '', where: '', detail: '', measure: '', targetDate: '', note: 'Belum Close' },
+            
+            // Perbaikan struktur array karyawan (tidak lagi double array)
+            karyawan: [
+                {nik: '7132', nama: 'TRI WALUYO'}, {nik: '2276', nama: 'NEMIN BIN ILYAS'},
+                {nik: '5407', nama: 'JAMALUDIN B.'}, {nik: '5922', nama: 'MARHEHE MANURUNG'},
+                {nik: '8375', nama: 'DARMA SETIAWAN SINAGA'}, {nik: '6889', nama: 'SHAHRUL MARDI'},
+                {nik: '6873', nama: 'DEDDY HARYADI'}, {nik: '6905', nama: 'ARI PUSPITA SARI'},
+                {nik: '7582', nama: 'RINI JANURIANI'}, {nik: '31332', nama: 'MUHAMAD RIDWAN'},
+                {nik: '32635', nama: 'AGENG DWI JUNIAR'}, {nik: '5410', nama: 'ADRIAN'},
+                {nik: '5794', nama: 'WURDIYANTO'}, {nik: '6000', nama: 'ACHMAD LUTFI'},
+                {nik: '7546', nama: 'BUDI HARSONO'}, {nik: '7552', nama: 'DENY AKBAR'},
+                {nik: '7598', nama: 'YUDI SUMANTO'}, {nik: '7747', nama: 'DIDIK HERMAWAN'},
+                {nik: '7962', nama: 'AGUS RIYADI'}, {nik: '8217', nama: 'SISWAHYUDIN'},
+                {nik: '8669', nama: 'DWI PURWANTO'}, {nik: '6190', nama: 'AGUS SOLIHIN'},
+                {nik: '6874', nama: 'ERIC PURBOYO'}, {nik: '7584', nama: 'ROGANDA S'},
+                {nik: '7735', nama: 'TRIYONO'}, {nik: '7965', nama: 'DEFRINAL'},
+                {nik: '17776', nama: 'CUCU PERMANA'}, {nik: '29999', nama: 'SYUKUR PUJIONO'},
+                {nik: '32602', nama: 'RENDY FIRDAUS'}, {nik: '6886', nama: 'MUHAMMAD YAHYA'},
+                {nik: '6890', nama: 'SONY SUDARSONO'}, {nik: '25379', nama: 'ASEP SUPYAN'},
+                {nik: '7541', nama: 'AGUS WANDI'}, {nik: '7591', nama: 'SUDARYANTO'},
+                {nik: '7595', nama: 'WAHYUDI'}, {nik: '31556', nama: 'DIMAS ADRIANTO'},
+                {nik: '31782', nama: 'FERI SETIADI'}, {nik: '31781', nama: 'COHYO WIBOWO'},
+                {nik: '19228', nama: 'SURASIT'}, {nik: '32366', nama: 'RAMDANI'},
+                {nik: '8781', nama: 'JHON LINDO ALKHOHAR'}, {nik: '32655', nama: 'ADITIA DWI PRIHANTARA'},
+                {nik: '5481', nama: 'ROHANDI'}, {nik: '6035', nama: 'PAUJIH'},
+                {nik: '6191', nama: 'PARYANTO'}, {nik: '6453', nama: 'KOZINATU ROHMAT'},
+                {nik: '6881', nama: 'MOHAMAD ABIDIN'}, {nik: '6891', nama: 'SRI HASTUTI'},
+                {nik: '6895', nama: 'UDIN SAMSUDIN'}, {nik: '6896', nama: 'WAWAN KURNIAWAN'},
+                {nik: '7571', nama: 'MARTUA MARTINUS S'}, {nik: '7581', nama: 'PULUNG MEGANTORO'},
+                {nik: '7589', nama: 'SUBANDI'}, {nik: '7727', nama: 'IYAN SOPIAN'},
+                {nik: '32562', nama: 'RAJA MUHAMAD DANIEL FADILAH'}, {nik: '30102', nama: 'FACHRUL SIGIT'},
+                {nik: '5193', nama: 'SUGIARTO'}, {nik: '5278', nama: 'SUGANDA SULAEMAN'},
+                {nik: '6862', nama: 'ADI SUTANTO'}, {nik: '6871', nama: 'DADAN DANI SUGANDI'},
+                {nik: '6882', nama: 'MARENDRO PRASETIYAWAN'}, {nik: '7547', nama: 'BUDIONO'},
+                {nik: '7569', nama: 'MARLINA MARIANTI SARAGIH'}, {nik: '7574', nama: 'MOHAMMAD ROMADHON'},
+                {nik: '7729', nama: 'MARYANTO'}, {nik: '6887', nama: 'NANDI SUPIANDI'},
+                {nik: '8219', nama: 'YUDHI PRADATA'}, {nik: '32559', nama: 'SARAH KALYNA SUKMA DEWI'},
+                {nik: '30270', nama: 'EGI MULYA'}, {nik: '30909', nama: 'ASTI RAMADANTI'},
+                {nik: '7551', nama: 'DENI KISMANTO'}, {nik: '7565', nama: 'JOKO RISTANTO'},
+                {nik: '30929', nama: 'FAJRI FAUZAN'}, {nik: '31555', nama: 'YUSRIL YAHYA'},
+                {nik: '31549', nama: 'DENY MAHESA P'}, {nik: '31551', nama: 'INDRA NUR WAKHIT'},
+                {nik: '31783', nama: 'FEWASADRIANTO'}, {nik: '31784', nama: 'MAGHFUR SHOLAHUDDIN'},
+                {nik: '31779', nama: 'RIO ARDIANSYAH SAPUTRA'}, {nik: '31330', nama: 'BILLY ADITYA SAPUTRA'},
+                {nik: '31397', nama: 'DICKY MUHAMAD ARIPIN'}, {nik: '31926', nama: 'IRFAN FAUZI'},
+                {nik: '32004', nama: 'DAPIT IRAWAN'}, {nik: '32005', nama: 'DIAN MAULANA SAPUTRA'},
+                {nik: '32363', nama: 'NAZIB BAEHAQI'}, {nik: '32367', nama: 'REGA'},
+                {nik: '32368', nama: 'RIDHO MAULANA IKSAN'}, {nik: '32361', nama: 'ALYA HANIFA'},
+                {nik: '32364', nama: 'NUR ALISAH'}, {nik: '32362', nama: 'NABIL'},
+                {nik: '32365', nama: 'PANDU AIDIL SAPUTRA'}, {nik: '32712', nama: 'MUHAMAD FAREL IBRAHIM'},
+                {nik: '7318', nama: 'APRIANTO HALASAN'}, {nik: '32599', nama: 'AQIL AL-GHIFARI TIDO'},
+                {nik: '30797', nama: 'TONY AL HISYAB'}, {nik: '32600', nama: 'DENDRA PITULAR PRAWISA'},
+                {nik: '31550', nama: 'IKHWAN FADLI ZAIN'}, {nik: '32653', nama: 'FADLAN FERDIANSYAH'},
+                {nik: '31334', nama: 'TOTO ISKANDAR'}, {nik: '32232', nama: 'BAYU SETIAWAN'},
+                {nik: '32441', nama: 'DENDI ANUGRAH'}, {nik: '32442', nama: 'MUHAMMAD RAFI JUNIOR'},
+                {nik: '7963', nama: 'AGUSTINUS LAPAN'}, {nik: '7732', nama: 'NAZMUDIN'},
+                {nik: '7593', nama: 'SURANTO'}, {nik: '6198', nama: 'AGUS SUSILO'},
+                {nik: '7733', nama: 'SUGENG RIYADI'}, {nik: '32561', nama: 'NANA ELDIYANA'},
+                {nik: '32601', nama: 'MUHAMMAD RISAL RAMADANI'}, {nik: '4759', nama: 'KHUMAEDI'},
+                {nik: '30933', nama: 'ANDIKA RAFA PRATHAMA'}, {nik: '7961', nama: 'ACHMAD HUDAN DARDIRI'},
+                {nik: '30838', nama: 'DEA LUTVIANA'}, {nik: '6885', nama: 'MOCHAMAD UMAR'},
+                {nik: '7550', nama: 'DEDI PRIATNA'}, {nik: '5427', nama: 'HARIE CATUR WIBOWO'},
+                {nik: '30558', nama: 'REKA DWI JAYA'}, {nik: '32273', nama: 'AGISTO'},
+                {nik: '7555', nama: 'EKO DONO SUSANTO'}, {nik: '30948', nama: 'DESTRIAN'},
+                {nik: '5921', nama: 'ARIYANTO'}, {nik: '7544', nama: 'ANO SUPARNO'},
+                {nik: '30100', nama: 'DAFFA APRIANSYAH'}, {nik: '31554', nama: 'MUHAMMAD FAIZ NUR SYAFIA'},
+                {nik: '31350', nama: 'AURELIA DAFA PUTRI'}, {nik: '31780', nama: 'CHANDRA YUSSARRAHMADI'},
+                {nik: '32171', nama: 'FIRMANSYAH DWI SAPUTRA'}, {nik: '26910', nama: 'IRZA ABILLAH AL FAIR'},
+                {nik: '32399', nama: 'ASEP GHIFARI SULAIMAN'}, {nik: '32713', nama: 'MUHAMAD BAGUS SETIANTO'}
+            ],
+
+            nearmiss: [],
+
+            logs: [{ time: 'Baru saja', msg: 'Sistem siap digunakan.' }],
+            stats: { sudahBuat: 0, open: 0, close: 0 },
+            menus: [
+                { id: 'dashboard', name: 'Dashboard', icon: 'layout-grid' },
+                { id: 'data-karyawan', name: 'Data Karyawan', icon: 'users' },
+                { id: 'data-nearmiss', name: 'Data Nearmiss', icon: 'alert-circle' }
+            ],
+
+            initApp() {
+                const savedKaryawan = localStorage.getItem('p2w_karyawan');
+                const savedNearmiss = localStorage.getItem('p2w_nearmiss');
+                if(savedKaryawan) this.karyawan = JSON.parse(savedKaryawan);
+                if(savedNearmiss) this.nearmiss = JSON.parse(savedNearmiss);
+                this.updateDashboard();
+                setTimeout(() => lucide.createIcons(), 100);
+            },
+
+            login() {
+                if(this.loginForm.user === 'admin' && this.loginForm.pass === 'admin') {
+                    this.isLoggedIn = true;
+                    this.addLog('Admin login');
+                    this.initApp();
+                } else { alert('User: admin | Pass: admin'); }
+            },
+
+            logout() { this.isLoggedIn = false; },
+
+            setPage(p, filter = 'all') {
+                this.page = p;
+                this.currentFilter = filter;
+                setTimeout(() => lucide.createIcons(), 100);
+            },
+
+            toggleSidebar() {
+                this.sidebarOpen = !this.sidebarOpen;
+                setTimeout(() => lucide.createIcons(), 100);
+            },
+
+            addLog(msg) {
+                this.logs.unshift({ time: new Date().toLocaleTimeString(), msg: msg });
+                if(this.logs.length > 5) this.logs.pop();
+            },
+
+            persistData() {
+                localStorage.setItem('p2w_karyawan', JSON.stringify(this.karyawan));
+                localStorage.setItem('p2w_nearmiss', JSON.stringify(this.nearmiss));
+            },
+
+            // --- CRUD KARYAWAN ---
+            openModal(type) {
+                this.isEdit = false;
+                if(type === 'karyawan') {
+                    this.formKaryawan = { nik: '', nama: '' };
+                    this.showModalKaryawan = true;
+                } else {
+                    this.formNearmiss = { id: Date.now(), nik: '', when: '', where: '', detail: '', measure: '', targetDate: '', note: 'Belum Close' };
+                    this.showModalNearmiss = true;
+                }
+            },
+
+            editKaryawan(k) {
+                this.isEdit = true;
+                this.oldNik = k.nik;
+                this.formKaryawan = { ...k }; 
+                this.showModalKaryawan = true;
+            },
+
+            saveKaryawan() {
+                if (!this.formKaryawan.nik || !this.formKaryawan.nama) return alert('Isi NIK dan Nama!');
+                if (this.isEdit) {
+                    const idx = this.karyawan.findIndex(k => k.nik === this.oldNik);
+                    if (idx !== -1) {
+                        this.karyawan[idx] = { ...this.formKaryawan };
+                        // Sinkronisasi data di Nearmiss jika NIK berubah
+                        this.nearmiss.forEach(n => {
+                            if (n.nik === this.oldNik) {
+                                n.nik = this.formKaryawan.nik;
+                                n.nama = this.formKaryawan.nama;
+                            }
+                        });
+                        this.addLog(`Update karyawan ${this.oldNik}`);
+                    }
+                } else {
+                    if (this.karyawan.some(k => k.nik === this.formKaryawan.nik)) return alert('NIK sudah ada!');
+                    this.karyawan.push({ ...this.formKaryawan });
+                    this.addLog(`Tambah karyawan ${this.formKaryawan.nik}`);
+                }
+                this.persistData();
+                this.showModalKaryawan = false;
+                this.updateDashboard();
+                setTimeout(() => lucide.createIcons(), 100);
+            },
+
+            deleteKaryawan(nik) {
+                if(confirm('Hapus karyawan ini?')) {
+                    this.karyawan = this.karyawan.filter(k => k.nik !== nik);
+                    this.persistData();
+                    this.addLog(`Hapus karyawan ${nik}`);
+                    this.updateDashboard();
+                }
+            },
+
+            // --- CRUD NEARMISS ---
+            editNearmiss(n) {
+                this.isEdit = true;
+                this.formNearmiss = { ...n };
+                this.showModalNearmiss = true;
+            },
+
+            saveNearmiss() {
+                const k = this.karyawan.find(item => item.nik === this.formNearmiss.nik);
+                if(!k) return alert('NIK tidak terdaftar!');
+                this.formNearmiss.nama = k.nama;
+
+                if(this.isEdit) {
+                    const idx = this.nearmiss.findIndex(i => i.id === this.formNearmiss.id);
+                    this.nearmiss[idx] = { ...this.formNearmiss };
+                    this.addLog(`Update laporan ID ${this.formNearmiss.id}`);
+                } else {
+                    this.nearmiss.push({ ...this.formNearmiss });
+                    this.addLog(`Laporan baru: ${this.formNearmiss.nik}`);
+                }
+                this.persistData();
+                this.showModalNearmiss = false;
+                this.updateDashboard();
+                setTimeout(() => lucide.createIcons(), 100);
+            },
+
+            deleteNearmiss(id) {
+                if(confirm('Hapus laporan ini?')) {
+                    this.nearmiss = this.nearmiss.filter(n => n.id !== id);
+                    this.persistData();
+                    this.addLog(`Hapus laporan ${id}`);
+                    this.updateDashboard();
+                }
+            },
+
+            checkLapor(nik) {
+                return this.nearmiss.some(n => n.nik === nik && n.when.startsWith(this.filterMonth));
+            },
+
+            get filteredData() {
+                let base = this.nearmiss.filter(n => n.when.startsWith(this.filterMonth));
+                if(this.currentFilter === 'close') return base.filter(n => n.note === 'Close');
+                if(this.currentFilter === 'open') return base.filter(n => n.note !== 'Close');
+                return base;
+            },
+
+            updateDashboard() {
+                const filtered = this.nearmiss.filter(n => n.when.startsWith(this.filterMonth));
+                this.stats.sudahBuat = [...new Set(filtered.map(n => n.nik))].length;
+                this.stats.close = filtered.filter(n => n.note === 'Close').length;
+                this.stats.open = filtered.filter(n => n.note !== 'Close').length;
+                this.renderChart();
+            },
+
+            renderChart() {
+                this.$nextTick(() => {
+                    const ctx = document.getElementById('barChart');
+                    if(!ctx) return;
+                    if(window.myChart) window.myChart.destroy();
+                    window.myChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Sudah Buat Usulan', 'Pending', 'Closed'],
+                            datasets: [{
+                                data: [this.stats.sudahBuat, this.stats.open, this.stats.close],
+                                backgroundColor: ['#3b82f6', '#ef4444', '#22c55e'],
+                                borderRadius: 12,
+                                barThickness: 40
+                            }]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: { 
+                                y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } },
+                                x: { grid: { display: false }, border: { display: false } }
+                            }
+                        }
+                    });
+                });
+            }
+        }
+    }
+</script>
+</body>
+</html>
