@@ -8,6 +8,7 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         [x-cloak] { display: none !important; }
@@ -391,6 +392,10 @@
                 if(this.logs.length > 5) this.logs.pop();
             },
 
+            // --- KONFIGURASI GOOGLE SHEETS ---
+            // Ganti link di bawah ini dengan URL Web App dari Google Apps Script Anda
+            scriptURL: 'ISI_DENGAN_URL_WEB_APP_GOOGLE_ANDA',
+
             persistData() {
                 localStorage.setItem('p2w_karyawan', JSON.stringify(this.karyawan));
                 localStorage.setItem('p2w_nearmiss', JSON.stringify(this.nearmiss));
@@ -421,7 +426,6 @@
                     const idx = this.karyawan.findIndex(k => k.nik === this.oldNik);
                     if (idx !== -1) {
                         this.karyawan[idx] = { ...this.formKaryawan };
-                        // Sinkronisasi data di Nearmiss jika NIK berubah
                         this.nearmiss.forEach(n => {
                             if (n.nik === this.oldNik) {
                                 n.nik = this.formKaryawan.nik;
@@ -457,7 +461,7 @@
                 this.showModalNearmiss = true;
             },
 
-            saveNearmiss() {
+            async saveNearmiss() {
                 const k = this.karyawan.find(item => item.nik === this.formNearmiss.nik);
                 if(!k) return alert('NIK tidak terdaftar!');
                 this.formNearmiss.nama = k.nama;
@@ -469,7 +473,24 @@
                 } else {
                     this.nearmiss.push({ ...this.formNearmiss });
                     this.addLog(`Laporan baru: ${this.formNearmiss.nik}`);
+                    
+                    // --- KIRIM DATA KE GOOGLE SHEETS ---
+                    if(this.scriptURL !== 'https://script.google.com/macros/s/AKfycbxGHettqCG2HXgBZmxii3xul3noyOSpi_T4-A4J2FU5xQLC6lrHBggr_DF7s-1xB58sbw/exec') {
+                        const formData = new FormData();
+                        formData.append('nik', this.formNearmiss.nik);
+                        formData.append('nama', k.nama);
+                        formData.append('when', this.formNearmiss.when);
+                        formData.append('where', this.formNearmiss.where);
+                        formData.append('detail', this.formNearmiss.detail);
+                        formData.append('measure', this.formNearmiss.measure);
+                        formData.append('status', this.formNearmiss.note);
+
+                        fetch(this.scriptURL, { method: 'POST', body: formData, mode: 'no-cors'})
+                            .then(() => console.log('Data terkirim ke Google Sheets'))
+                            .catch(err => alert('Gagal kirim ke server: ' + err));
+                    }
                 }
+                
                 this.persistData();
                 this.showModalNearmiss = false;
                 this.updateDashboard();
