@@ -357,38 +357,37 @@
                 { id: 'data-nearmiss', name: 'Data Nearmiss', icon: 'alert-circle' }
             ],
 
-            async initApp() {
+           async initApp() {
     this.addLog('Menghubungkan ke database pusat...');
     
-    // 1. Ambil data Karyawan (Tetap dari lokal tidak apa-apa agar cepat)
+    // 1. Ambil data Karyawan (Lokal)
     const savedKaryawan = localStorage.getItem('p2w_karyawan');
     if(savedKaryawan) this.karyawan = JSON.parse(savedKaryawan);
 
-    // 2. Ambil data Nearmiss dari Spreadsheet (WAJIB OVERWRITE)
+    // 2. Ambil data Nearmiss dari Spreadsheet (Mapping sesuai gambar)
     try {
-        const response = await fetch(this.scriptURL);
+        const response = await fetch(this.scriptURL + '?t=' + Date.now());
         if (!response.ok) throw new Error('Gagal koneksi');
         
         const dataSheets = await response.json();
         
-        // Mapping ulang agar formatnya pas dengan aplikasi Anda
-        this.nearmiss = dataSheets.map((row, index) => ({
-            id: index + Date.now(), // Generate ID unik sementara
-            nik: row[0],
-            nama: row[1],
-            when: row[2],
-            where: row[3],
-            detail: row[4],
-            measure: row[5],
-            note: row[6]
-        }));
-        
-        this.addLog('Data pusat berhasil dimuat.');
+        if (dataSheets && dataSheets.length > 0) {
+            this.nearmiss = dataSheets.map((row, index) => ({
+                id: 'GS-' + index, 
+                nik: String(row[1] || ''),       // Kolom B
+                nama: String(row[2] || ''),      // Kolom C
+                when: String(row[3] || ''),      // Kolom D
+                where: String(row[4] || ''),     // Kolom E
+                detail: String(row[5] || ''),    // Kolom F
+                measure: String(row[6] || ''),   // Kolom G
+                targetDate: String(row[7] || ''),// Kolom H
+                note: String(row[8] || 'Open')   // Kolom I
+            }));
+            this.addLog('Data pusat berhasil dimuat.');
+        }
     } catch (err) {
         console.error("Gagal ambil data pusat:", err);
-        this.addLog('Gagal ambil data pusat. Menggunakan data cadangan lokal.');
-        
-        // Fallback: Jika internet mati, baru pakai localStorage
+        this.addLog('Gagal koneksi. Menggunakan data lokal.');
         const savedNearmiss = localStorage.getItem('p2w_nearmiss');
         if(savedNearmiss) this.nearmiss = JSON.parse(savedNearmiss);
     }
@@ -396,7 +395,6 @@
     this.updateDashboard();
     setTimeout(() => lucide.createIcons(), 100);
 },
-
             login() {
                 if(this.loginForm.user === 'admin' && this.loginForm.pass === 'admin') {
                     this.isLoggedIn = true;
@@ -425,7 +423,7 @@
 
             // --- KONFIGURASI GOOGLE SHEETS ---
             // Ganti link di bawah ini dengan URL Web App dari Google Apps Script Anda
-            scriptURL: 'https://script.google.com/macros/s/AKfycbwK6musZv1jXbGcAx0Nc9cwQZidk40YdYsASgr83TeHr9PbAWHnRmp4nXWF9aGdMb2x0A/exec',
+            scriptURL: 'https://script.google.com/macros/s/AKfycbwqNwV2hLjl6ktio1SQH3wbvS9VYVJAgb8pBYoD2DF01Qog4jPGpx7E0j_USX6UyQddog/exec',
 
             persistData() {
               // Simpan daftar karyawan agar saat input NIK langsung muncul nama (offline ok)
@@ -495,27 +493,53 @@
             },
 
             async saveNearmiss() {
-                const k = this.karyawan.find(item => item.nik === this.formNearmiss.nik);
-                if(!k) return alert('NIK tidak terdaftar!');
-                this.formNearmiss.nama = k.nama;
+    const k = this.karyawan.find(item => item.nik === this.formNearmiss.nik);
+    if(!k) return alert('NIK tidak terdaftar!');
+    this.formNearmiss.nama = k.nama;
 
-                if(this.isEdit) {
-                    const idx = this.nearmiss.findIndex(i => i.id === this.formNearmiss.id);
-                    this.nearmiss[idx] = { ...this.formNearmiss };
-                    this.addLog(`Update laporan ID ${this.formNearmiss.id}`);
-                } else {
-                    this.nearmiss.push({ ...this.formNearmiss });
-                    this.addLog(`Laporan baru: ${this.formNearmiss.nik}`);
-                    
-                    // --- KIRIM DATA KE GOOGLE SHEETS (DIPERBAIKI) ---
-                    this.sendToSpreadsheet('nearmiss', this.formNearmiss);
-                }
-                
-                this.persistData();
-                this.showModalNearmiss = false;
-                this.updateDashboard();
-                setTimeout(() => lucide.createIcons(), 100);
-            },
+    if(this.isEdit) {
+        const idx = this.nearmiss.findIndex(i => i.id === this.formNearmiss.id);
+        this.nearmiss[idx] = { ...this.formNearmiss };
+        this.addLog(`Update laporan ${this.formNearmiss.nik}`);
+    } else {
+        // Tambahkan ke UI lokal dulu agar cepat
+        this.nearmiss.push({ ...this.formNearmiss });
+        this.addLog(`Mengirim laporan baru ke pusat...`);
+        
+        // Kirim ke Google Sheets
+        await this.sendToSpreadsheet('nearmiss', this.formNearmiss);
+    }
+    
+    this.persistData();
+    this.showModalNearmiss = false;
+    this.updateDashboard();
+},
+
+async sendToSpreadsheet(type, data) {
+    const formData = new URLSearchParams();
+    formData.append('type', type);
+    
+    // Mapping data agar sesuai dengan kolom di Sheets
+    formData.append('nik', data.nik);
+    formData.append('nama', data.nama);
+    formData.append('when', data.when);
+    formData.append('where', data.where);
+    formData.append('detail', data.detail);
+    formData.append('measure', data.measure);
+    formData.append('targetDate', data.targetDate);
+    formData.append('note', data.note || 'Open');
+
+    try {
+        await fetch(this.scriptURL, {
+            method: 'POST',
+            body: formData,
+            mode: 'no-cors' // Penting untuk Google Apps Script
+        });
+        this.addLog("Berhasil sinkron ke database pusat.");
+    } catch (err) {
+        this.addLog("Error: Gagal simpan ke pusat.");
+    }
+},
 
             // --- FUNGSI SINKRONISASI PUSAT ---
             async sendToSpreadsheet(type, data) {
