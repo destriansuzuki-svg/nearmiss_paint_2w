@@ -358,32 +358,44 @@
             ],
 
             async initApp() {
-                // Ambil data Karyawan dari lokal (opsional)
-                const savedKaryawan = localStorage.getItem('p2w_karyawan');
-                if(savedKaryawan) this.karyawan = JSON.parse(savedKaryawan);
+    this.addLog('Menghubungkan ke database pusat...');
+    
+    // 1. Ambil data Karyawan (Tetap dari lokal tidak apa-apa agar cepat)
+    const savedKaryawan = localStorage.getItem('p2w_karyawan');
+    if(savedKaryawan) this.karyawan = JSON.parse(savedKaryawan);
 
-                // Ambil data Nearmiss dari Spreadsheet Pusat
-                try {
-                    const response = await fetch(this.scriptURL);
-                    const dataSheets = await response.json();
-                    // Sesuaikan mapping row[0], row[1] dst dengan urutan kolom di Google Sheets Anda
-                    this.nearmiss = dataSheets.map((row, index) => ({
-                        id: index,
-                        nik: row[0],
-                        nama: row[1],
-                        when: row[2],
-                        where: row[3],
-                        detail: row[4],
-                        measure: row[5],
-                        note: row[6]
-                    }));
-                } catch (err) {
-                    console.log("Gagal ambil data pusat, menggunakan data lokal.");
-                }
+    // 2. Ambil data Nearmiss dari Spreadsheet (WAJIB OVERWRITE)
+    try {
+        const response = await fetch(this.scriptURL);
+        if (!response.ok) throw new Error('Gagal koneksi');
+        
+        const dataSheets = await response.json();
+        
+        // Mapping ulang agar formatnya pas dengan aplikasi Anda
+        this.nearmiss = dataSheets.map((row, index) => ({
+            id: index + Date.now(), // Generate ID unik sementara
+            nik: row[0],
+            nama: row[1],
+            when: row[2],
+            where: row[3],
+            detail: row[4],
+            measure: row[5],
+            note: row[6]
+        }));
+        
+        this.addLog('Data pusat berhasil dimuat.');
+    } catch (err) {
+        console.error("Gagal ambil data pusat:", err);
+        this.addLog('Gagal ambil data pusat. Menggunakan data cadangan lokal.');
+        
+        // Fallback: Jika internet mati, baru pakai localStorage
+        const savedNearmiss = localStorage.getItem('p2w_nearmiss');
+        if(savedNearmiss) this.nearmiss = JSON.parse(savedNearmiss);
+    }
 
-                this.updateDashboard();
-                setTimeout(() => lucide.createIcons(), 100);
-            },
+    this.updateDashboard();
+    setTimeout(() => lucide.createIcons(), 100);
+},
 
             login() {
                 if(this.loginForm.user === 'admin' && this.loginForm.pass === 'admin') {
@@ -416,7 +428,11 @@
             scriptURL: 'https://script.google.com/macros/s/AKfycbzPyr2CefbpY8XyM09ggs2b_4Af1VPUhwHA6slyAH0H/dev',
 
             persistData() {
-               localStorage.setItem('p2w_karyawan', JSON.stringify(this.karyawan));
+              // Simpan daftar karyawan agar saat input NIK langsung muncul nama (offline ok)
+    localStorage.setItem('p2w_karyawan', JSON.stringify(this.karyawan));
+    
+    // Opsional: Simpan nearmiss ke lokal HANYA sebagai cadangan
+    localStorage.setItem('p2w_nearmiss', JSON.stringify(this.nearmiss));
             },
 
             // --- CRUD KARYAWAN ---
