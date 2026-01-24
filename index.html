@@ -52,13 +52,6 @@
                     </button>
                 </template>
             </nav>
-            <div class="p-4 bg-slate-900/50 mx-2 rounded-xl mb-4" x-show="sidebarOpen">
-                <p class="text-[9px] font-bold text-slate-500 uppercase">Status Sinkron</p>
-                <div class="flex items-center gap-2 mt-1">
-                    <div class="w-2 h-2 rounded-full bg-green-500 sync-indicator"></div>
-                    <p class="text-[10px] text-slate-300 font-semibold italic">Terhubung ke Cloud</p>
-                </div>
-            </div>
             <button @click="logout()" class="p-6 text-red-400 flex items-center gap-3 hover:bg-red-500/10 border-t border-slate-800/50 transition-all">
                 <i data-lucide="log-out" class="w-5 h-5"></i>
                 <span x-show="sidebarOpen" class="text-sm font-bold uppercase tracking-widest">Logout</span>
@@ -84,85 +77,99 @@
             </header>
 
             <main class="flex-1 overflow-y-auto p-6 lg:p-10">
+                
                 <div x-show="page === 'dashboard'" class="space-y-8">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center">
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Master Karyawan</p>
                             <h4 class="text-4xl font-black text-slate-800 mt-2" x-text="karyawan.length"></h4>
                         </div>
-                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center">
                             <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Lapor Bulan Ini</p>
                             <h4 class="text-4xl font-black text-blue-600 mt-2" x-text="stats.sudahBuat"></h4>
                         </div>
-                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-                            <p class="text-[10px] font-black text-orange-500 uppercase tracking-widest">Belum Lapor</p>
-                            <h4 class="text-4xl font-black text-orange-600 mt-2" x-text="karyawan.length - stats.sudahBuat"></h4>
-                        </div>
-                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-                            <p class="text-[10px] font-black text-green-500 uppercase tracking-widest">Resolved (Close)</p>
-                            <h4 class="text-4xl font-black text-green-600 mt-2" x-text="stats.close"></h4>
-                        </div>
-                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-                            <p class="text-[10px] font-black text-red-500 uppercase tracking-widest">Open Action</p>
+                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center">
+                            <p class="text-[10px] font-black text-red-500 uppercase tracking-widest">Pending</p>
                             <h4 class="text-4xl font-black text-red-600 mt-2" x-text="stats.open"></h4>
                         </div>
+                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center text-green-600">
+                            <p class="text-[10px] font-black uppercase tracking-widest">Closed</p>
+                            <h4 class="text-4xl font-black mt-2" x-text="stats.close"></h4>
+                        </div>
+                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total</p>
+                            <h4 class="text-4xl font-black text-slate-800 mt-2" x-text="nearmiss.filter(n => n.when.startsWith(filterMonth)).length"></h4>
+                        </div>
                     </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm min-h-[400px]">
-                            <h3 class="font-black text-slate-800 mb-6 uppercase text-xs tracking-widest flex items-center gap-2">
-                                <i data-lucide="bar-chart-2" class="w-4 h-4 text-blue-600"></i> Statistik Nearmiss (Update Otomatis)
-                            </h3>
-                            <div class="h-80"><canvas id="barChart"></canvas></div>
-                        </div>
-                        <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                            <h3 class="font-black text-slate-800 mb-6 uppercase text-xs tracking-widest flex items-center gap-2">
-                                <i data-lucide="history" class="w-4 h-4 text-blue-600"></i> Log Sinkronisasi
-                            </h3>
-                            <div class="space-y-4">
-                                <template x-for="log in logs">
-                                    <div class="flex gap-4 items-start pb-4 border-b border-slate-50 last:border-0">
-                                        <div class="w-2 h-2 mt-1.5 rounded-full bg-blue-500 shrink-0"></div>
-                                        <div>
-                                            <p class="text-xs font-bold text-slate-700" x-text="log.msg"></p>
-                                            <p class="text-[10px] text-slate-400 mt-1" x-text="log.time"></p>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
+                    <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                        <h3 class="font-black text-slate-800 mb-6 uppercase text-xs tracking-widest flex items-center gap-2">
+                            <i data-lucide="bar-chart-2" class="w-4 h-4 text-blue-600"></i> Statistik Nearmiss
+                        </h3>
+                        <div class="h-80"><canvas id="barChart"></canvas></div>
                     </div>
                 </div>
 
-                <div x-show="page === 'data-karyawan'" class="space-y-4">
-                    <div class="flex justify-between items-center">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Database Anggota Sinkron</p>
-                        <button @click="openModal('karyawan')" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all">+ Input Karyawan Baru</button>
+                <div x-show="page === 'data-nearmiss'" class="space-y-4">
+                    <div class="bg-white p-6 rounded-[2rem] border shadow-sm space-y-4">
+                        <div class="flex flex-col md:flex-row justify-between gap-4">
+                            <div class="relative flex-1">
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
+                                    <i data-lucide="search" class="w-5 h-5"></i>
+                                </span>
+                                <input type="text" x-model="searchQuery" placeholder="Cari Nama atau NIK..." 
+                                    class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold transition-all">
+                            </div>
+                            
+                            <div class="flex bg-slate-100 p-1.5 rounded-2xl gap-1">
+                                <button @click="currentFilter = 'all'" :class="currentFilter === 'all' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'" class="px-6 py-2 rounded-xl text-xs font-black uppercase transition-all">SEMUA</button>
+                                <button @click="currentFilter = 'open'" :class="currentFilter === 'open' ? 'bg-red-600 text-white shadow-lg' : 'text-slate-500'" class="px-6 py-2 rounded-xl text-xs font-black uppercase transition-all">PENDING</button>
+                                <button @click="currentFilter = 'close'" :class="currentFilter === 'close' ? 'bg-green-600 text-white shadow-lg' : 'text-slate-500'" class="px-6 py-2 rounded-xl text-xs font-black uppercase transition-all">CLOSED</button>
+                            </div>
+                            
+                            <button @click="openModal('nearmiss')" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-sm shadow-xl shadow-blue-200 hover:scale-105 transition-all">
+                                + TAMBAH LAPORAN
+                            </button>
+                        </div>
                     </div>
-                    <div class="bg-white rounded-[2rem] border overflow-hidden shadow-sm">
-                        <table class="w-full text-sm text-left">
+
+                    <div class="bg-white rounded-[2.5rem] border overflow-x-auto shadow-sm">
+                        <table class="w-full text-[12px] text-left border-collapse min-w-[1000px]">
                             <thead class="bg-slate-800 text-white font-bold uppercase tracking-wider">
                                 <tr>
-                                    <th class="p-4 text-center">No</th>
-                                    <th class="p-4 text-center">NIK</th>
-                                    <th class="p-4">Nama Lengkap</th>
-                                    <th class="p-4 text-center">Status Lapor</th>
-                                    <th class="p-4 text-center">Aksi</th>
+                                    <th class="p-5 text-center">No</th>
+                                    <th class="p-5">Karyawan</th>
+                                    <th class="p-5">Waktu & Lokasi</th>
+                                    <th class="p-5">Detail Bahaya</th>
+                                    <th class="p-5 text-center">Status</th>
+                                    <th class="p-5 text-center">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-50 font-semibold">
-                                <template x-for="(k, index) in karyawan" :key="k.nik">
-                                    <tr class="hover:bg-slate-50">
-                                        <td class="p-5 text-center text-slate-400" x-text="index + 1"></td>
-                                        <td class="p-5 text-center text-blue-600 font-bold" x-text="k.nik"></td>
-                                        <td class="p-5 text-slate-800" x-text="k.nama"></td>
-                                        <td class="p-5 text-center">
-                                            <span class="px-3 py-1 rounded-full text-[10px]" 
-                                                  :class="checkLapor(k.nik) ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'"
-                                                  x-text="checkLapor(k.nik) ? 'SUDAH' : 'BELUM'"></span>
+                            <tbody class="divide-y divide-slate-100">
+                                <template x-for="(n, index) in filteredData" :key="index">
+                                    <tr class="hover:bg-blue-50/50 transition-colors">
+                                        <td class="p-5 text-center text-slate-400 font-bold" x-text="index + 1"></td>
+                                        <td class="p-5">
+                                            <div class="font-black text-blue-600" x-text="n.nik"></div>
+                                            <div class="text-slate-500 font-bold uppercase" x-text="n.nama"></div>
                                         </td>
-                                        <td class="p-5 text-center space-x-2">
-                                            <button @click="editKaryawan(k)" class="text-blue-500 p-2 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                        <td class="p-5">
+                                            <div class="font-bold text-slate-800" x-text="n.when"></div>
+                                            <div class="text-slate-400 italic" x-text="n.where"></div>
+                                        </td>
+                                        <td class="p-5 max-w-xs truncate font-medium text-slate-600" x-text="n.detail"></td>
+                                        <td class="p-5 text-center">
+                                            <span :class="n.note === 'Close' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'" 
+                                                  class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase" x-text="n.note"></span>
+                                        </td>
+                                        <td class="p-5 text-center">
+                                            <div class="flex justify-center gap-2">
+                                                <button @click="editNearmiss(n)" class="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all">
+                                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                                </button>
+                                                <button @click="deleteNearmiss(n)" class="p-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 </template>
@@ -171,45 +178,31 @@
                     </div>
                 </div>
 
-                <div x-show="page === 'data-nearmiss'" class="space-y-4">
-                    <div class="bg-white p-4 rounded-2xl border flex justify-between items-center shadow-sm">
-                        <div class="flex gap-2">
-                            <button @click="currentFilter = 'all'" :class="currentFilter === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all">Semua</button>
-                            <button @click="currentFilter = 'open'" :class="currentFilter === 'open' ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-500'" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all">Pending</button>
-                            <button @click="currentFilter = 'close'" :class="currentFilter === 'close' ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-500'" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all">Closed</button>
-                        </div>
-                        <button @click="openModal('nearmiss')" class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all">+ Tambah Laporan Online</button>
+                <div x-show="page === 'data-karyawan'" class="space-y-4">
+                    <div class="flex justify-between items-center bg-white p-6 rounded-[2rem] border shadow-sm">
+                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Database Anggota Sinkron</p>
+                        <button @click="openModal('karyawan')" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold shadow-lg hover:bg-blue-700">+ Input Baru</button>
                     </div>
-
-                    <div class="bg-white rounded-[2.5rem] border overflow-x-auto shadow-sm">
-                        <table class="w-full text-[11px] text-left border-collapse min-w-[1200px]">
-                            <thead class="bg-slate-800 text-white font-bold uppercase tracking-wider">
+                    <div class="bg-white rounded-[2rem] border overflow-hidden shadow-sm">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-slate-800 text-white uppercase text-[11px]">
                                 <tr>
-                                    <th class="p-4 border border-slate-700 text-center">No</th>
-                                    <th class="p-4 border border-slate-700">NIK</th>
-                                    <th class="p-4 border border-slate-700">Nama</th>
-                                    <th class="p-4 border border-slate-700">When</th>
-                                    <th class="p-4 border border-slate-700">Where</th>
-                                    <th class="p-4 border border-slate-700">Detail Bahaya</th>
-                                    <th class="p-4 border border-slate-700 text-center">Status</th>
-                                    <th class="p-4 border border-slate-700 text-center">Aksi</th>
+                                    <th class="p-4 text-center">No</th>
+                                    <th class="p-4">NIK</th>
+                                    <th class="p-4">Nama Lengkap</th>
+                                    <th class="p-4 text-center">Status Lapor</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <template x-for="(n, index) in filteredData" :key="n.id">
-                                    <tr class="hover:bg-blue-50/50 font-semibold border-b">
-                                        <td class="p-4 text-center text-slate-400" x-text="index + 1"></td>
-                                        <td class="p-4 text-blue-600 font-bold" x-text="n.nik"></td>
-                                        <td class="p-4 text-slate-800 uppercase" x-text="n.nama"></td>
-                                        <td class="p-4" x-text="n.when"></td>
-                                        <td class="p-4" x-text="n.where"></td>
-                                        <td class="p-4 text-slate-600 italic" x-text="n.detail"></td>
+                            <tbody class="divide-y font-semibold">
+                                <template x-for="(k, idx) in karyawan" :key="k.nik">
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-4 text-center text-slate-400" x-text="idx + 1"></td>
+                                        <td class="p-4 text-blue-600 font-bold" x-text="k.nik"></td>
+                                        <td class="p-4 text-slate-800" x-text="k.nama"></td>
                                         <td class="p-4 text-center">
-                                            <span :class="n.note === 'Close' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'" 
-                                                  class="px-3 py-1 rounded-lg text-[9px] font-black uppercase" x-text="n.note"></span>
-                                        </td>
-                                        <td class="p-4 text-center space-x-1">
-                                            <button @click="editNearmiss(n)" class="text-blue-500 p-1.5 hover:bg-blue-50 rounded"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                            <span :class="checkLapor(k.nik) ? 'text-green-600' : 'text-slate-300'">
+                                                <i :data-lucide="checkLapor(k.nik) ? 'check-circle-2' : 'circle'" class="w-5 h-5 mx-auto"></i>
+                                            </span>
                                         </td>
                                     </tr>
                                 </template>
@@ -221,50 +214,63 @@
         </div>
     </div>
 
-    <div x-show="showModalKaryawan" class="fixed inset-0 z-[110] flex items-center justify-center p-4 modal-bg" x-cloak>
-        <div class="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
-            <h3 class="text-xl font-black mb-6">Tambah Karyawan ke Cloud</h3>
-            <div class="space-y-4">
-                <input type="text" x-model="formKaryawan.nik" placeholder="NIK" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold">
-                <input type="text" x-model="formKaryawan.nama" placeholder="Nama Lengkap" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold">
-                <div class="flex gap-3 mt-6">
-                    <button @click="showModalKaryawan = false" class="flex-1 py-4 font-bold text-slate-400">Batal</button>
-                    <button @click="saveKaryawan()" class="flex-1 py-4 bg-blue-600 text-white font-black rounded-2xl">SIMPAN KE CLOUD</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div x-show="showModalNearmiss" class="fixed inset-0 z-[110] flex items-center justify-center p-4 modal-bg" x-cloak>
         <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h3 class="text-xl font-black mb-6">Tambah Laporan Online</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h3 class="text-2xl font-black mb-6 flex items-center gap-3">
+                <i data-lucide="alert-circle" class="text-blue-600"></i>
+                <span x-text="isEdit ? 'Update Laporan' : 'Laporan Baru'"></span>
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
-                    <label class="text-[10px] font-black uppercase text-slate-400">Pilih Karyawan Sinkron</label>
-                    <select x-model="formNearmiss.nik" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold appearance-none">
+                    <label class="block text-[10px] font-black uppercase text-slate-400">Pilih Karyawan</label>
+                    <select x-model="formNearmiss.nik" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-blue-600 appearance-none">
                         <option value="">- Pilih NIK -</option>
                         <template x-for="k in karyawan">
                             <option :value="k.nik" x-text="k.nik + ' - ' + k.nama"></option>
                         </template>
                     </select>
-                    <input type="date" x-model="formNearmiss.when" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold">
-                    <input type="text" x-model="formNearmiss.where" placeholder="Lokasi (Where)" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold">
+                    <label class="block text-[10px] font-black uppercase text-slate-400">Kapan & Dimana</label>
+                    <input type="date" x-model="formNearmiss.when" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold">
+                    <input type="text" x-model="formNearmiss.where" placeholder="Lokasi (Where)" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold">
                 </div>
                 <div class="space-y-4">
-                    <textarea x-model="formNearmiss.detail" placeholder="Detail Bahaya" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold h-32"></textarea>
-                    <textarea x-model="formNearmiss.measure" placeholder="Tindakan" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold h-32"></textarea>
+                    <label class="block text-[10px] font-black uppercase text-slate-400">Analisa Bahaya & Perbaikan</label>
+                    <textarea x-model="formNearmiss.detail" placeholder="Detail Bahaya" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold h-24"></textarea>
+                    <textarea x-model="formNearmiss.measure" placeholder="Tindakan/Measure" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold h-24"></textarea>
                 </div>
             </div>
-            <div class="grid grid-cols-2 gap-4 mt-4">
-                <input type="date" x-model="formNearmiss.targetDate" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold">
-                <select x-model="formNearmiss.note" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold">
-                    <option value="Belum Close">Belum Close (Pending)</option>
-                    <option value="Close">Close (Resolved)</option>
-                </select>
+            <div class="grid grid-cols-2 gap-4 mt-6">
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Target Selesai</label>
+                    <input type="date" x-model="formNearmiss.targetDate" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Status</label>
+                    <select x-model="formNearmiss.note" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-blue-600">
+                        <option value="Belum Close">Belum Close (Pending)</option>
+                        <option value="Close">Close (Resolved)</option>
+                    </select>
+                </div>
             </div>
-            <div class="flex gap-3 mt-8">
-                <button @click="showModalNearmiss = false" class="flex-1 py-4 font-bold text-slate-400">BATAL</button>
-                <button @click="saveNearmiss()" class="flex-1 py-4 bg-blue-600 text-white font-black rounded-2xl shadow-lg">KIRIM KE PUSAT</button>
+            <div class="flex gap-4 mt-8">
+                <button @click="showModalNearmiss = false" class="flex-1 py-4 font-bold text-slate-400 hover:text-slate-600 transition-colors">BATAL</button>
+                <button @click="saveNearmiss()" class="flex-1 py-4 bg-blue-600 text-white font-black rounded-2xl shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all">
+                    SIMPAN KE CLOUD
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="showModalKaryawan" class="fixed inset-0 z-[110] flex items-center justify-center p-4 modal-bg" x-cloak>
+        <div class="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+            <h3 class="text-xl font-black mb-6">Tambah Karyawan ke Cloud</h3>
+            <div class="space-y-4">
+                <input type="text" x-model="formKaryawan.nik" placeholder="NIK" class="w-full p-4 bg-slate-50 border-2 rounded-2xl font-bold">
+                <input type="text" x-model="formKaryawan.nama" placeholder="Nama Lengkap" class="w-full p-4 bg-slate-50 border-2 rounded-2xl font-bold">
+                <div class="flex gap-3 mt-6">
+                    <button @click="showModalKaryawan = false" class="flex-1 py-4 font-bold text-slate-400">Batal</button>
+                    <button @click="saveKaryawan()" class="flex-1 py-4 bg-blue-600 text-white font-black rounded-2xl shadow-lg">SIMPAN</button>
+                </div>
             </div>
         </div>
     </div>
@@ -276,20 +282,22 @@
             sidebarOpen: true,
             page: 'dashboard',
             currentFilter: 'all',
+            searchQuery: '',
             isSyncing: false,
+            isEdit: false,
+            originalData: null,
             showModalKaryawan: false,
             showModalNearmiss: false,
             filterMonth: new Date().toISOString().slice(0, 7),
             loginForm: { user: '', pass: '' },
             formKaryawan: { nik: '', nama: '' },
-            formNearmiss: { id: null, nik: '', nama: '', when: '', where: '', detail: '', measure: '', targetDate: '', note: 'Belum Close' },
+            formNearmiss: { nik: '', nama: '', when: '', where: '', detail: '', measure: '', targetDate: '', note: 'Belum Close' },
             
             // Masukkan URL Deployment Google Apps Script Anda
             scriptURL: 'https://script.google.com/macros/s/AKfycbyiDWiXNU5YSxjaChZlCsXKe8JfzyWKZuGoAvGjDUQSezgeIf4kySfsd0BCEQnNlnJAJw/exec',
             
             karyawan: [],
             nearmiss: [],
-            logs: [{ time: 'System Ready', msg: 'Dashboard Sinkron Aktif.' }],
             stats: { sudahBuat: 0, open: 0, close: 0 },
             menus: [
                 { id: 'dashboard', name: 'Dashboard', icon: 'layout-grid' },
@@ -299,104 +307,81 @@
 
             async initApp() {
                 await this.syncAll();
-                // Jalankan Auto-Sync setiap 30 detik
-                setInterval(() => {
-                    if (this.isLoggedIn) this.syncAll(true);
-                }, 30000);
+                setInterval(() => { if (this.isLoggedIn) this.syncAll(true); }, 30000);
             },
 
             async syncAll(isAuto = false) {
                 if (this.isSyncing) return;
                 this.isSyncing = true;
-                if (!isAuto) this.addLog('Menyinkronkan data dengan Cloud...');
-
                 try {
                     const response = await fetch(`${this.scriptURL}?t=${Date.now()}`);
                     const result = await response.json();
-                    
                     if (result.karyawan) {
                         this.karyawan = result.karyawan.map(row => ({ nik: String(row[0]), nama: String(row[1]) }));
                     }
                     if (result.nearmiss) {
-                        this.nearmiss = result.nearmiss.map((row, index) => ({
-                            id: 'ID-' + index, nik: String(row[0]), nama: String(row[1]), when: String(row[2]), where: String(row[3]),
+                        this.nearmiss = result.nearmiss.map(row => ({
+                            nik: String(row[0]), nama: String(row[1]), when: String(row[2]), where: String(row[3]),
                             detail: String(row[4]), measure: String(row[5]), targetDate: String(row[6]), note: String(row[7])
-                        })).reverse(); // Data terbaru di atas
+                        })).reverse();
                     }
-                    if (!isAuto) this.addLog('Database Pusat Terkoneksi.');
-                } catch (err) {
-                    this.addLog('Gagal Sinkron: Periksa Internet.');
-                } finally {
+                } catch (err) { console.error('Sync Error'); } 
+                finally {
                     this.isSyncing = false;
                     this.updateDashboard();
                     setTimeout(() => lucide.createIcons(), 100);
                 }
             },
 
-            login() {
-                if(this.loginForm.user === 'admin' && this.loginForm.pass === 'admin') {
-                    this.isLoggedIn = true;
-                    this.initApp();
-                } else { alert('User/Pass salah!'); }
-            },
-
-            logout() { this.isLoggedIn = false; },
-
-            setPage(p) {
-                this.page = p;
-                this.syncAll(true);
-            },
-
-            toggleSidebar() {
-                this.sidebarOpen = !this.sidebarOpen;
-                setTimeout(() => lucide.createIcons(), 100);
-            },
-
-            addLog(msg) {
-                this.logs.unshift({ time: new Date().toLocaleTimeString(), msg: msg });
-                if(this.logs.length > 5) this.logs.pop();
-            },
-
-            openModal(type) {
-                if(type === 'karyawan') {
-                    this.formKaryawan = { nik: '', nama: '' };
-                    this.showModalKaryawan = true;
-                } else {
-                    this.formNearmiss = { id: Date.now(), nik: '', when: '', where: '', detail: '', measure: '', targetDate: '', note: 'Belum Close' };
-                    this.showModalNearmiss = true;
+            get filteredData() {
+                let base = this.nearmiss.filter(n => n.when.startsWith(this.filterMonth));
+                if (this.currentFilter === 'close') base = base.filter(n => n.note === 'Close');
+                if (this.currentFilter === 'open') base = base.filter(n => n.note !== 'Close');
+                if (this.searchQuery) {
+                    const q = this.searchQuery.toLowerCase();
+                    base = base.filter(n => n.nama.toLowerCase().includes(q) || n.nik.toLowerCase().includes(q));
                 }
+                return base;
             },
 
-            async saveKaryawan() {
-                if (!this.formKaryawan.nik || !this.formKaryawan.nama) return alert('Isi lengkap!');
-                this.addLog('Mengirim data karyawan ke Cloud...');
-                try {
-                    await this.sendToSpreadsheet('karyawan', this.formKaryawan);
-                    this.showModalKaryawan = false;
-                    this.syncAll();
-                    alert('Berhasil: Semua laptop kini bisa melihat karyawan baru ini.');
-                } catch (e) { alert('Gagal simpan.'); }
+            async deleteNearmiss(item) {
+                if(!confirm('Hapus laporan ini secara permanen?')) return;
+                const formData = new URLSearchParams();
+                formData.append('type', 'nearmiss');
+                formData.append('action', 'delete');
+                formData.append('nik', item.nik);
+                formData.append('when', item.when);
+                await fetch(this.scriptURL, { method: 'POST', body: formData, mode: 'no-cors' });
+                this.syncAll();
+                alert('Data Terhapus');
+            },
+
+            editNearmiss(item) {
+                this.isEdit = true;
+                this.originalData = { nik: item.nik, when: item.when };
+                this.formNearmiss = { ...item };
+                this.showModalNearmiss = true;
             },
 
             async saveNearmiss() {
-                const k = this.karyawan.find(item => item.nik === this.formNearmiss.nik);
-                if(!k) return alert('NIK salah!');
-                this.formNearmiss.nama = k.nama;
+                if (!this.formNearmiss.nik || !this.formNearmiss.when) return alert('Data Belum Lengkap');
+                const k = this.karyawan.find(i => i.nik === this.formNearmiss.nik);
+                this.formNearmiss.nama = k ? k.nama : 'Unknown';
                 
-                this.addLog('Mengirim laporan ke Database Pusat...');
-                try {
-                    await this.sendToSpreadsheet('nearmiss', this.formNearmiss);
-                    this.showModalNearmiss = false;
-                    this.syncAll();
-                    alert('Laporan Tersimpan! Laptop lain akan melihat data ini dalam hitungan detik.');
-                } catch (e) { alert('Gagal kirim.'); }
-            },
-
-            async sendToSpreadsheet(type, data) {
                 const formData = new URLSearchParams();
-                formData.append('type', type);
-                for(let key in data) { formData.append(key, data[key]); }
+                formData.append('type', 'nearmiss');
+                if(this.isEdit) {
+                    formData.append('action', 'update');
+                    formData.append('oldNik', this.originalData.nik);
+                    formData.append('oldWhen', this.originalData.when);
+                }
+                for(let key in this.formNearmiss) { formData.append(key, this.formNearmiss[key]); }
+                
                 await fetch(this.scriptURL, { method: 'POST', body: formData, mode: 'no-cors' });
+                this.showModalNearmiss = false;
+                this.isEdit = false;
+                this.syncAll();
+                alert('Berhasil!');
             },
 
             updateDashboard() {
@@ -415,11 +400,11 @@
                     window.myChart = new Chart(ctx, {
                         type: 'bar',
                         data: {
-                            labels: ['Total Laporan', 'Status Pending', 'Status Close'],
+                            labels: ['Total Laporan', 'Pending', 'Closed'],
                             datasets: [{
-                                data: [filteredDataCount = this.nearmiss.filter(n => n.when.startsWith(this.filterMonth)).length, this.stats.open, this.stats.close],
+                                data: [this.nearmiss.filter(n => n.when.startsWith(this.filterMonth)).length, this.stats.open, this.stats.close],
                                 backgroundColor: ['#3b82f6', '#ef4444', '#22c55e'],
-                                borderRadius: 8
+                                borderRadius: 12
                             }]
                         },
                         options: {
@@ -430,16 +415,38 @@
                 });
             },
 
-            checkLapor(nik) {
-                return this.nearmiss.some(n => n.nik === nik && n.when.startsWith(this.filterMonth));
+            openModal(type) {
+                if(type === 'karyawan') {
+                    this.formKaryawan = { nik: '', nama: '' };
+                    this.showModalKaryawan = true;
+                } else {
+                    this.isEdit = false;
+                    this.formNearmiss = { nik: '', nama: '', when: '', where: '', detail: '', measure: '', targetDate: '', note: 'Belum Close' };
+                    this.showModalNearmiss = true;
+                }
+                setTimeout(() => lucide.createIcons(), 50);
             },
 
-            get filteredData() {
-                let base = this.nearmiss.filter(n => n.when.startsWith(this.filterMonth));
-                if(this.currentFilter === 'close') return base.filter(n => n.note === 'Close');
-                if(this.currentFilter === 'open') return base.filter(n => n.note !== 'Close');
-                return base;
-            }
+            async saveKaryawan() {
+                const formData = new URLSearchParams();
+                formData.append('type', 'karyawan');
+                for(let key in this.formKaryawan) { formData.append(key, this.formKaryawan[key]); }
+                await fetch(this.scriptURL, { method: 'POST', body: formData, mode: 'no-cors' });
+                this.showModalKaryawan = false;
+                this.syncAll();
+                alert('Karyawan Disimpan');
+            },
+
+            login() {
+                if(this.loginForm.user === 'admin' && this.loginForm.pass === 'admin') {
+                    this.isLoggedIn = true;
+                    this.initApp();
+                } else { alert('Gagal Login'); }
+            },
+            logout() { this.isLoggedIn = false; },
+            setPage(p) { this.page = p; this.syncAll(true); },
+            toggleSidebar() { this.sidebarOpen = !this.sidebarOpen; setTimeout(() => lucide.createIcons(), 100); },
+            checkLapor(nik) { return this.nearmiss.some(n => n.nik === nik && n.when.startsWith(this.filterMonth)); }
         };
     }
     </script>
