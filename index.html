@@ -269,20 +269,23 @@
 
     <script>
     function appData() {
-        return {
-            isLoggedIn: false,
-            sidebarOpen: true,
-            page: 'dashboard',
-            currentFilter: 'all',
-            isEdit: false,
-            oldNik: null, // Digunakan untuk referensi saat update NIK
-            showModalKaryawan: false,
-            showModalNearmiss: false,
-            filterMonth: new Date().toISOString().slice(0, 7),
-            loginForm: { user: '', pass: '' },
-            formKaryawan: { nik: '', nama: '' },
-            formNearmiss: { id: null, nik: '', nama: '', when: '', where: '', detail: '', measure: '', targetDate: '', note: 'Belum Close' },
-            
+    return {
+        isLoggedIn: false,
+        sidebarOpen: true,
+        page: 'dashboard',
+        currentFilter: 'all',
+        isEdit: false,
+        oldNik: null,
+        showModalKaryawan: false,
+        showModalNearmiss: false,
+        filterMonth: new Date().toISOString().slice(0, 7),
+        loginForm: { user: '', pass: '' },
+        formKaryawan: { nik: '', nama: '' },
+        formNearmiss: { id: null, nik: '', nama: '', when: '', where: '', detail: '', measure: '', targetDate: '', note: 'Belum Close' },
+        
+        // URL WEB APP (Pastikan sudah di-deploy ulang jika ada perubahan di Apps Script)
+        scriptURL: 'https://script.google.com/macros/s/AKfycbwqNwV2hLjl6ktio1SQH3wbvS9VYVJAgb8pBYoD2DF01Qog4jPGpx7E0j_USX6UyQddog/exec',
+                
             // Perbaikan struktur array karyawan (tidak lagi double array)
             karyawan: [
                 {nik: '7132', nama: 'TRI WALUYO'}, {nik: '2276', nama: 'NEMIN BIN ILYAS'},
@@ -352,8 +355,7 @@
                 {nik: '32399', nama: 'ASEP GHIFARI SULAIMAN'}, {nik: '32713', nama: 'MUHAMAD BAGUS SETIANTO'}
             ],
 
-            nearmiss: [],
-
+nearmiss: [],
             logs: [{ time: 'Baru saja', msg: 'Sistem siap digunakan.' }],
             stats: { sudahBuat: 0, open: 0, close: 0 },
             menus: [
@@ -362,44 +364,46 @@
                 { id: 'data-nearmiss', name: 'Data Nearmiss', icon: 'alert-circle' }
             ],
 
-async initApp() {
-    this.addLog('Menghubungkan ke database pusat...');
-    
-    // 1. Muat Karyawan dari Lokal
-    const savedKaryawan = localStorage.getItem('p2w_karyawan');
-    if(savedKaryawan) this.karyawan = JSON.parse(savedKaryawan);
+            // --- LOGIKA INISIALISASI ---
+            async initApp() {
+                this.addLog('Menghubungkan ke database pusat...');
+                
+                // 1. Muat data lokal
+                const savedKaryawan = localStorage.getItem('p2w_karyawan');
+                if(savedKaryawan) this.karyawan = JSON.parse(savedKaryawan);
 
-    // 2. Ambil data Nearmiss dari Spreadsheet (Mapping Kolom A-H)
-    try {
-        const response = await fetch(this.scriptURL + '?t=' + Date.now());
-        if (!response.ok) throw new Error('Gagal koneksi');
-        
-        const dataSheets = await response.json();
-        
-        if (dataSheets && dataSheets.length > 0) {
-            this.nearmiss = dataSheets.map((row, index) => ({
-                id: 'GS-' + index, 
-                nik: String(row[0] || ''),        // Kolom A: NIK
-                nama: String(row[1] || ''),       // Kolom B: Nama
-                when: String(row[2] || ''),       // Kolom C: When
-                where: String(row[3] || ''),      // Kolom D: Where
-                detail: String(row[4] || ''),     // Kolom E: Detail
-                measure: String(row[5] || ''),    // Kolom F: Measure
-                targetDate: String(row[6] || ''), // Kolom G: TargetDate
-                note: String(row[7] || 'Open')    // Kolom H: Note
-            }));
-            this.addLog('Data pusat berhasil dimuat.');
-        }
-    } catch (err) {
-        console.error("Gagal ambil data pusat:", err);
-        this.addLog('Mode Offline: Menggunakan data lokal.');
-        const savedNearmiss = localStorage.getItem('p2w_nearmiss');
-        if(savedNearmiss) this.nearmiss = JSON.parse(savedNearmiss);
-    }
+                // 2. Ambil data dari Spreadsheet
+                try {
+                    const response = await fetch(this.scriptURL + '?t=' + Date.now());
+                    if (!response.ok) throw new Error('Gagal koneksi');
+                    
+                    const dataSheets = await response.json();
+                    if (dataSheets && dataSheets.length > 0) {
+                        this.nearmiss = dataSheets.map((row, index) => ({
+                            id: 'GS-' + index, 
+                            nik: String(row[0] || ''),
+                            nama: String(row[1] || ''),
+                            when: String(row[2] || ''),
+                            where: String(row[3] || ''),
+                            detail: String(row[4] || ''),
+                            measure: String(row[5] || ''),
+                            targetDate: String(row[6] || ''),
+                            note: String(row[7] || 'Open')
+                        }));
+                        this.addLog('Data pusat berhasil dimuat.');
+                    }
+                } catch (err) {
+                    console.error("Gagal ambil data pusat:", err);
+                    this.addLog('Mode Offline: Menggunakan data lokal.');
+                    const savedNearmiss = localStorage.getItem('p2w_nearmiss');
+                    if(savedNearmiss) this.nearmiss = JSON.parse(savedNearmiss);
+                }
 
-    this.updateDashboard();
-    setTimeout(() => lucide.createIcons(), 100);
-},
+                this.updateDashboard();
+                setTimeout(() => lucide.createIcons(), 100);
+            },
+
+            // --- SISTEM LOGIN & NAVIGASI ---
             login() {
                 if(this.loginForm.user === 'admin' && this.loginForm.pass === 'admin') {
                     this.isLoggedIn = true;
@@ -407,38 +411,26 @@ async initApp() {
                     this.initApp();
                 } else { alert('User: admin | Pass: admin'); }
             },
-
             logout() { this.isLoggedIn = false; },
-
             setPage(p, filter = 'all') {
                 this.page = p;
                 this.currentFilter = filter;
                 setTimeout(() => lucide.createIcons(), 100);
             },
-
             toggleSidebar() {
                 this.sidebarOpen = !this.sidebarOpen;
                 setTimeout(() => lucide.createIcons(), 100);
             },
-
             addLog(msg) {
                 this.logs.unshift({ time: new Date().toLocaleTimeString(), msg: msg });
                 if(this.logs.length > 5) this.logs.pop();
             },
-
-            // --- KONFIGURASI GOOGLE SHEETS ---
-            // Ganti link di bawah ini dengan URL Web App dari Google Apps Script Anda
-            scriptURL: 'https://script.google.com/macros/s/AKfycbwqNwV2hLjl6ktio1SQH3wbvS9VYVJAgb8pBYoD2DF01Qog4jPGpx7E0j_USX6UyQddog/exec',
-
             persistData() {
-              // Simpan daftar karyawan agar saat input NIK langsung muncul nama (offline ok)
-    localStorage.setItem('p2w_karyawan', JSON.stringify(this.karyawan));
-    
-    // Opsional: Simpan nearmiss ke lokal HANYA sebagai cadangan
-    localStorage.setItem('p2w_nearmiss', JSON.stringify(this.nearmiss));
+                localStorage.setItem('p2w_karyawan', JSON.stringify(this.karyawan));
+                localStorage.setItem('p2w_nearmiss', JSON.stringify(this.nearmiss));
             },
 
-            // --- CRUD KARYAWAN ---
+            // --- MODAL & CRUD ---
             openModal(type) {
                 this.isEdit = false;
                 if(type === 'karyawan') {
@@ -450,112 +442,50 @@ async initApp() {
                 }
             },
 
-            editKaryawan(k) {
-                this.isEdit = true;
-                this.oldNik = k.nik;
-                this.formKaryawan = { ...k }; 
-                this.showModalKaryawan = true;
-            },
-
             saveKaryawan() {
-    if (!this.formKaryawan.nik || !this.formKaryawan.nama) return alert('Isi NIK dan Nama!');
-    
-    if (this.isEdit) {
-        // Logika Update (Lokal)
-        const idx = this.karyawan.findIndex(k => k.nik === this.oldNik);
-        if (idx !== -1) {
-            this.karyawan[idx] = { ...this.formKaryawan };
-            this.addLog(`Update karyawan ${this.oldNik}`);
-        }
-    } else {
-        // Logika Tambah Baru
-        if (this.karyawan.some(k => k.nik === this.formKaryawan.nik)) return alert('NIK sudah ada!');
-        this.karyawan.push({ ...this.formKaryawan });
-        this.addLog(`Tambah karyawan ${this.formKaryawan.nik}`);
-        
-        // --- TAMBAHKAN PEMANGGILAN KE SPREADSHEET DI SINI ---
-        this.sendToSpreadsheet('karyawan', this.formKaryawan);
-    }
-    
-    this.persistData();
-    this.showModalKaryawan = false;
-    this.updateDashboard();
-},
-
-            deleteKaryawan(nik) {
-                if(confirm('Hapus karyawan ini?')) {
-                    this.karyawan = this.karyawan.filter(k => k.nik !== nik);
-                    this.persistData();
-                    this.addLog(`Hapus karyawan ${nik}`);
-                    this.updateDashboard();
+                if (!this.formKaryawan.nik || !this.formKaryawan.nama) return alert('Isi NIK dan Nama!');
+                if (this.isEdit) {
+                    const idx = this.karyawan.findIndex(k => k.nik === this.oldNik);
+                    if (idx !== -1) this.karyawan[idx] = { ...this.formKaryawan };
+                } else {
+                    if (this.karyawan.some(k => k.nik === this.formKaryawan.nik)) return alert('NIK sudah ada!');
+                    this.karyawan.push({ ...this.formKaryawan });
+                    this.sendToSpreadsheet('karyawan', this.formKaryawan);
                 }
-            },
-// --- CRUD NEARMISS ---
-            editNearmiss(n) {
-                this.isEdit = true;
-                this.formNearmiss = { ...n };
-                this.showModalNearmiss = true;
+                this.persistData();
+                this.showModalKaryawan = false;
             },
 
             async saveNearmiss() {
-    const k = this.karyawan.find(item => item.nik === this.formNearmiss.nik);
-    if(!k) return alert('NIK tidak terdaftar!');
-    this.formNearmiss.nama = k.nama;
+                const k = this.karyawan.find(item => item.nik === this.formNearmiss.nik);
+                if(!k) return alert('NIK tidak terdaftar!');
+                this.formNearmiss.nama = k.nama;
 
-    if(this.isEdit) {
-        const idx = this.nearmiss.findIndex(i => i.id === this.formNearmiss.id);
-        this.nearmiss[idx] = { ...this.formNearmiss };
-        this.addLog(`Update laporan ${this.formNearmiss.nik}`);
-    } else {
-        // Tambahkan ke UI lokal dulu agar cepat
-        this.nearmiss.push({ ...this.formNearmiss });
-        this.addLog(`Mengirim laporan baru ke pusat...`);
-        
-        // Kirim ke Google Sheets
-        await this.sendToSpreadsheet('nearmiss', this.formNearmiss);
-    }
-    
-    this.persistData();
-    this.showModalNearmiss = false;
-    this.updateDashboard();
-},
+                if(this.isEdit) {
+                    const idx = this.nearmiss.findIndex(i => i.id === this.formNearmiss.id);
+                    if(idx !== -1) this.nearmiss[idx] = { ...this.formNearmiss };
+                } else {
+                    this.nearmiss.push({ ...this.formNearmiss });
+                    await this.sendToSpreadsheet('nearmiss', this.formNearmiss);
+                }
+                this.persistData();
+                this.showModalNearmiss = false;
+                this.updateDashboard();
+            },
 
-async sendToSpreadsheet(type, data) {
-    const formData = new URLSearchParams();
-    formData.append('type', type);
-    
-    // Mapping parameter agar sesuai dengan urutan appendRow di Apps Script
-    formData.append('nik', data.nik);
-    formData.append('nama', data.nama);
-    formData.append('when', data.when);
-    formData.append('where', data.where);
-    formData.append('detail', data.detail);
-    formData.append('measure', data.measure);
-    formData.append('targetDate', data.targetDate);
-    formData.append('note', data.note || 'Open');
-
-    try {
-        await fetch(this.scriptURL, {
-            method: 'POST',
-            body: formData,
-            mode: 'no-cors' 
-        });
-        this.addLog("Berhasil tersimpan di pusat.");
-    } catch (err) {
-        console.error("Fetch error:", err);
-        this.addLog("Error: Gagal sinkron ke pusat.");
-    }
-}
-
-            // --- FUNGSI SINKRONISASI PUSAT ---
+            // --- SINKRONISASI PUSAT ---
             async sendToSpreadsheet(type, data) {
                 const formData = new URLSearchParams();
-                formData.append('type', type); 
-                
-                // Otomatis memasukkan semua data form ke dalam pengiriman
-                for (let key in data) {
-                    formData.append(key, data[key]);
-                }
+                formData.append('type', type);
+                // Mapping eksplisit untuk kepastian kolom di Apps Script
+                formData.append('nik', data.nik || '');
+                formData.append('nama', data.nama || '');
+                formData.append('when', data.when || '');
+                formData.append('where', data.where || '');
+                formData.append('detail', data.detail || '');
+                formData.append('measure', data.measure || '');
+                formData.append('targetDate', data.targetDate || '');
+                formData.append('note', data.note || 'Open');
 
                 try {
                     await fetch(this.scriptURL, {
@@ -563,32 +493,13 @@ async sendToSpreadsheet(type, data) {
                         body: formData,
                         mode: 'no-cors'
                     });
-                    this.addLog("Berhasil kirim ke Spreadsheet pusat.");
+                    this.addLog("Berhasil sinkron ke pusat.");
                 } catch (err) {
-                    console.error("Gagal sinkron: ", err);
-                    alert('Koneksi internet bermasalah, data gagal masuk Spreadsheet pusat.');
+                    this.addLog("Koneksi gagal, data hanya tersimpan lokal.");
                 }
             },
 
-            deleteNearmiss(id) {
-                if(confirm('Hapus laporan ini?')) {
-                    this.nearmiss = this.nearmiss.filter(n => n.id !== id);
-                    this.persistData();
-                    this.addLog(`Hapus laporan ${id}`);
-                    this.updateDashboard();
-                }
-            },
-            checkLapor(nik) {
-                return this.nearmiss.some(n => n.nik === nik && n.when.startsWith(this.filterMonth));
-            },
-
-            get filteredData() {
-                let base = this.nearmiss.filter(n => n.when.startsWith(this.filterMonth));
-                if(this.currentFilter === 'close') return base.filter(n => n.note === 'Close');
-                if(this.currentFilter === 'open') return base.filter(n => n.note !== 'Close');
-                return base;
-            },
-
+            // --- DASHBOARD & CHART ---
             updateDashboard() {
                 const filtered = this.nearmiss.filter(n => n.when.startsWith(this.filterMonth));
                 this.stats.sudahBuat = [...new Set(filtered.map(n => n.nik))].length;
@@ -605,24 +516,32 @@ async sendToSpreadsheet(type, data) {
                     window.myChart = new Chart(ctx, {
                         type: 'bar',
                         data: {
-                            labels: ['Sudah Buat Usulan', 'Pending', 'Closed'],
+                            labels: ['Lapor', 'Pending', 'Closed'],
                             datasets: [{
                                 data: [this.stats.sudahBuat, this.stats.open, this.stats.close],
                                 backgroundColor: ['#3b82f6', '#ef4444', '#22c55e'],
-                                borderRadius: 12,
-                                barThickness: 40
+                                borderRadius: 8
                             }]
                         },
                         options: {
-                            responsive: true, maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
-                            scales: { 
-                                y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false } },
-                                x: { grid: { display: false }, border: { display: false } }
-                            }
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } }
                         }
                     });
                 });
+            },
+
+            // --- GETTER & HELPER ---
+            get filteredData() {
+                let base = this.nearmiss.filter(n => n.when.startsWith(this.filterMonth));
+                if(this.currentFilter === 'close') return base.filter(n => n.note === 'Close');
+                if(this.currentFilter === 'open') return base.filter(n => n.note !== 'Close');
+                return base;
+            },
+
+            checkLapor(nik) {
+                return this.nearmiss.some(n => n.nik === nik && n.when.startsWith(this.filterMonth));
             }
         }
     }
