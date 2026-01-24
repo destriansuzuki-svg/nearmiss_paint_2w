@@ -129,15 +129,20 @@
                     </div>
                     <div class="bg-white rounded-[2rem] border overflow-hidden shadow-sm">
                         <table class="w-full text-sm text-left">
-                            <thead class="bg-slate-50 text-slate-400 font-black uppercase text-[10px] tracking-widest">
-                                <tr>
-                                    <th class="p-5">No</th>
-                                    <th class="p-5">NIK</th>
-                                    <th class="p-5">Nama Karyawan</th>
-                                    <th class="p-5">Status Lapor</th>
-                                    <th class="p-5 text-right">Aksi</th>
-                                </tr>
-                            </thead>
+                            <thead class="bg-slate-800 text-white font-bold uppercase tracking-wider">
+    <tr>
+        <th class="p-4 border border-slate-700 text-center">No</th>
+        <th class="p-4 border border-slate-700">NIK</th>
+        <th class="p-4 border border-slate-700">Nama</th>
+        <th class="p-4 border border-slate-700">When</th>
+        <th class="p-4 border border-slate-700">Where</th>
+        <th class="p-4 border border-slate-700">Detail Bahaya</th>
+        <th class="p-4 border border-slate-700">Countermeasure</th>
+        <th class="p-4 border border-slate-700">Target Date</th>
+        <th class="p-4 border border-slate-700 text-center">Status</th>
+        <th class="p-4 border border-slate-700 text-center">Aksi</th>
+    </tr>
+</thead>
                             <tbody class="divide-y divide-slate-50 font-semibold">
                                 <template x-for="(k, index) in karyawan" :key="k.nik">
                                     <tr class="hover:bg-slate-50">
@@ -357,14 +362,14 @@
                 { id: 'data-nearmiss', name: 'Data Nearmiss', icon: 'alert-circle' }
             ],
 
-           async initApp() {
+async initApp() {
     this.addLog('Menghubungkan ke database pusat...');
     
-    // 1. Ambil data Karyawan (Lokal)
+    // 1. Muat Karyawan dari Lokal
     const savedKaryawan = localStorage.getItem('p2w_karyawan');
     if(savedKaryawan) this.karyawan = JSON.parse(savedKaryawan);
 
-    // 2. Ambil data Nearmiss dari Spreadsheet (Mapping sesuai gambar)
+    // 2. Ambil data Nearmiss dari Spreadsheet (Mapping Kolom A-H)
     try {
         const response = await fetch(this.scriptURL + '?t=' + Date.now());
         if (!response.ok) throw new Error('Gagal koneksi');
@@ -374,20 +379,20 @@
         if (dataSheets && dataSheets.length > 0) {
             this.nearmiss = dataSheets.map((row, index) => ({
                 id: 'GS-' + index, 
-                nik: String(row[1] || ''),       // Kolom B
-                nama: String(row[2] || ''),      // Kolom C
-                when: String(row[3] || ''),      // Kolom D
-                where: String(row[4] || ''),     // Kolom E
-                detail: String(row[5] || ''),    // Kolom F
-                measure: String(row[6] || ''),   // Kolom G
-                targetDate: String(row[7] || ''),// Kolom H
-                note: String(row[8] || 'Open')   // Kolom I
+                nik: String(row[0] || ''),        // Kolom A: NIK
+                nama: String(row[1] || ''),       // Kolom B: Nama
+                when: String(row[2] || ''),       // Kolom C: When
+                where: String(row[3] || ''),      // Kolom D: Where
+                detail: String(row[4] || ''),     // Kolom E: Detail
+                measure: String(row[5] || ''),    // Kolom F: Measure
+                targetDate: String(row[6] || ''), // Kolom G: TargetDate
+                note: String(row[7] || 'Open')    // Kolom H: Note
             }));
             this.addLog('Data pusat berhasil dimuat.');
         }
     } catch (err) {
         console.error("Gagal ambil data pusat:", err);
-        this.addLog('Gagal koneksi. Menggunakan data lokal.');
+        this.addLog('Mode Offline: Menggunakan data lokal.');
         const savedNearmiss = localStorage.getItem('p2w_nearmiss');
         if(savedNearmiss) this.nearmiss = JSON.parse(savedNearmiss);
     }
@@ -519,7 +524,7 @@ async sendToSpreadsheet(type, data) {
     const formData = new URLSearchParams();
     formData.append('type', type);
     
-    // Mapping data agar sesuai dengan kolom di Sheets
+    // Mapping parameter agar sesuai dengan urutan appendRow di Apps Script
     formData.append('nik', data.nik);
     formData.append('nama', data.nama);
     formData.append('when', data.when);
@@ -533,13 +538,14 @@ async sendToSpreadsheet(type, data) {
         await fetch(this.scriptURL, {
             method: 'POST',
             body: formData,
-            mode: 'no-cors' // Penting untuk Google Apps Script
+            mode: 'no-cors' 
         });
-        this.addLog("Berhasil sinkron ke database pusat.");
+        this.addLog("Berhasil tersimpan di pusat.");
     } catch (err) {
-        this.addLog("Error: Gagal simpan ke pusat.");
+        console.error("Fetch error:", err);
+        this.addLog("Error: Gagal sinkron ke pusat.");
     }
-},
+}
 
             // --- FUNGSI SINKRONISASI PUSAT ---
             async sendToSpreadsheet(type, data) {
