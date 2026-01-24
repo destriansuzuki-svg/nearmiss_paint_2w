@@ -357,11 +357,30 @@
                 { id: 'data-nearmiss', name: 'Data Nearmiss', icon: 'alert-circle' }
             ],
 
-            initApp() {
+            async initApp() {
+                // Ambil data Karyawan dari lokal (opsional)
                 const savedKaryawan = localStorage.getItem('p2w_karyawan');
-                const savedNearmiss = localStorage.getItem('p2w_nearmiss');
                 if(savedKaryawan) this.karyawan = JSON.parse(savedKaryawan);
-                if(savedNearmiss) this.nearmiss = JSON.parse(savedNearmiss);
+
+                // Ambil data Nearmiss dari Spreadsheet Pusat
+                try {
+                    const response = await fetch(this.scriptURL);
+                    const dataSheets = await response.json();
+                    // Sesuaikan mapping row[0], row[1] dst dengan urutan kolom di Google Sheets Anda
+                    this.nearmiss = dataSheets.map((row, index) => ({
+                        id: index,
+                        nik: row[0],
+                        nama: row[1],
+                        when: row[2],
+                        where: row[3],
+                        detail: row[4],
+                        measure: row[5],
+                        note: row[6]
+                    }));
+                } catch (err) {
+                    console.log("Gagal ambil data pusat, menggunakan data lokal.");
+                }
+
                 this.updateDashboard();
                 setTimeout(() => lucide.createIcons(), 100);
             },
@@ -394,11 +413,10 @@
 
             // --- KONFIGURASI GOOGLE SHEETS ---
             // Ganti link di bawah ini dengan URL Web App dari Google Apps Script Anda
-            scriptURL: 'ISI_DENGAN_URL_WEB_APP_GOOGLE_ANDA',
+            scriptURL: 'https://script.google.com/macros/s/AKfycbzPyr2CefbpY8XyM09ggs2b_4Af1VPUhwHA6slyAH0H/dev',
 
             persistData() {
-                localStorage.setItem('p2w_karyawan', JSON.stringify(this.karyawan));
-                localStorage.setItem('p2w_nearmiss', JSON.stringify(this.nearmiss));
+               localStorage.setItem('p2w_karyawan', JSON.stringify(this.karyawan));
             },
 
             // --- CRUD KARYAWAN ---
@@ -421,29 +439,29 @@
             },
 
             saveKaryawan() {
-                if (!this.formKaryawan.nik || !this.formKaryawan.nama) return alert('Isi NIK dan Nama!');
-                if (this.isEdit) {
-                    const idx = this.karyawan.findIndex(k => k.nik === this.oldNik);
-                    if (idx !== -1) {
-                        this.karyawan[idx] = { ...this.formKaryawan };
-                        this.nearmiss.forEach(n => {
-                            if (n.nik === this.oldNik) {
-                                n.nik = this.formKaryawan.nik;
-                                n.nama = this.formKaryawan.nama;
-                            }
-                        });
-                        this.addLog(`Update karyawan ${this.oldNik}`);
-                    }
-                } else {
-                    if (this.karyawan.some(k => k.nik === this.formKaryawan.nik)) return alert('NIK sudah ada!');
-                    this.karyawan.push({ ...this.formKaryawan });
-                    this.addLog(`Tambah karyawan ${this.formKaryawan.nik}`);
-                }
-                this.persistData();
-                this.showModalKaryawan = false;
-                this.updateDashboard();
-                setTimeout(() => lucide.createIcons(), 100);
-            },
+    if (!this.formKaryawan.nik || !this.formKaryawan.nama) return alert('Isi NIK dan Nama!');
+    
+    if (this.isEdit) {
+        // Logika Update (Lokal)
+        const idx = this.karyawan.findIndex(k => k.nik === this.oldNik);
+        if (idx !== -1) {
+            this.karyawan[idx] = { ...this.formKaryawan };
+            this.addLog(`Update karyawan ${this.oldNik}`);
+        }
+    } else {
+        // Logika Tambah Baru
+        if (this.karyawan.some(k => k.nik === this.formKaryawan.nik)) return alert('NIK sudah ada!');
+        this.karyawan.push({ ...this.formKaryawan });
+        this.addLog(`Tambah karyawan ${this.formKaryawan.nik}`);
+        
+        // --- TAMBAHKAN PEMANGGILAN KE SPREADSHEET DI SINI ---
+        this.sendToSpreadsheet('karyawan', this.formKaryawan);
+    }
+    
+    this.persistData();
+    this.showModalKaryawan = false;
+    this.updateDashboard();
+},
 
             deleteKaryawan(nik) {
                 if(confirm('Hapus karyawan ini?')) {
@@ -453,8 +471,7 @@
                     this.updateDashboard();
                 }
             },
-
-            // --- CRUD NEARMISS ---
+// --- CRUD NEARMISS ---
             editNearmiss(n) {
                 this.isEdit = true;
                 this.formNearmiss = { ...n };
@@ -474,27 +491,37 @@
                     this.nearmiss.push({ ...this.formNearmiss });
                     this.addLog(`Laporan baru: ${this.formNearmiss.nik}`);
                     
-                    // --- KIRIM DATA KE GOOGLE SHEETS ---
-                    if(this.scriptURL !== 'https://script.google.com/macros/s/AKfycbxGHettqCG2HXgBZmxii3xul3noyOSpi_T4-A4J2FU5xQLC6lrHBggr_DF7s-1xB58sbw/exec') {
-                        const formData = new FormData();
-                        formData.append('nik', this.formNearmiss.nik);
-                        formData.append('nama', k.nama);
-                        formData.append('when', this.formNearmiss.when);
-                        formData.append('where', this.formNearmiss.where);
-                        formData.append('detail', this.formNearmiss.detail);
-                        formData.append('measure', this.formNearmiss.measure);
-                        formData.append('status', this.formNearmiss.note);
-
-                        fetch(this.scriptURL, { method: 'POST', body: formData, mode: 'no-cors'})
-                            .then(() => console.log('Data terkirim ke Google Sheets'))
-                            .catch(err => alert('Gagal kirim ke server: ' + err));
-                    }
+                    // --- KIRIM DATA KE GOOGLE SHEETS (DIPERBAIKI) ---
+                    this.sendToSpreadsheet('nearmiss', this.formNearmiss);
                 }
                 
                 this.persistData();
                 this.showModalNearmiss = false;
                 this.updateDashboard();
                 setTimeout(() => lucide.createIcons(), 100);
+            },
+
+            // --- FUNGSI SINKRONISASI PUSAT ---
+            async sendToSpreadsheet(type, data) {
+                const formData = new URLSearchParams();
+                formData.append('type', type); 
+                
+                // Otomatis memasukkan semua data form ke dalam pengiriman
+                for (let key in data) {
+                    formData.append(key, data[key]);
+                }
+
+                try {
+                    await fetch(this.scriptURL, {
+                        method: 'POST',
+                        body: formData,
+                        mode: 'no-cors'
+                    });
+                    this.addLog("Berhasil kirim ke Spreadsheet pusat.");
+                } catch (err) {
+                    console.error("Gagal sinkron: ", err);
+                    alert('Koneksi internet bermasalah, data gagal masuk Spreadsheet pusat.');
+                }
             },
 
             deleteNearmiss(id) {
@@ -505,7 +532,6 @@
                     this.updateDashboard();
                 }
             },
-
             checkLapor(nik) {
                 return this.nearmiss.some(n => n.nik === nik && n.when.startsWith(this.filterMonth));
             },
