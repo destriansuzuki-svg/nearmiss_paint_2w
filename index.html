@@ -59,10 +59,17 @@
             <main class="flex-1 overflow-y-auto p-6 lg:p-10">
                 
                 <div x-show="page === 'dashboard'" class="space-y-8">
+                    <div class="bg-white p-4 rounded-2xl border flex items-center gap-4">
+                        <span class="text-xs font-bold text-slate-400 uppercase">Filter Tanggal:</span>
+                        <input type="date" x-model="startDate" @change="updateDashboard()" class="p-2 border rounded-lg text-xs font-bold">
+                        <span class="text-slate-300">-</span>
+                        <input type="date" x-model="endDate" @change="updateDashboard()" class="p-2 border rounded-lg text-xs font-bold">
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div class="bg-white p-6 rounded-3xl border text-center">
                             <p class="text-[10px] font-black text-blue-500 uppercase">Total Nearmiss</p>
-                            <h4 class="text-4xl font-black text-blue-600 mt-2" x-text="nearmiss.length"></h4>
+                            <h4 class="text-4xl font-black text-blue-600 mt-2" x-text="filteredNearmissDashboard.length"></h4>
                         </div>
                         <div class="bg-white p-6 rounded-3xl border text-center">
                             <p class="text-[10px] font-black text-red-500 uppercase">Pending</p>
@@ -78,33 +85,39 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div class="bg-white p-8 rounded-[2.5rem] border shadow-sm h-80">
-                            <canvas id="barChart"></canvas>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border shadow-sm h-80">
+                            <h4 class="text-[10px] font-black text-slate-400 uppercase mb-4">Temuan Per Bulan Fiskal (Apr-Mar)</h4>
+                            <div class="h-64"><canvas id="barChart"></canvas></div>
                         </div>
-                        <div class="bg-white p-8 rounded-[2.5rem] border shadow-sm overflow-hidden flex flex-col h-80">
-                            <h4 class="font-black text-slate-800 mb-4 uppercase text-xs tracking-widest">Log Aktivitas Terbaru</h4>
-                            <div class="flex-1 overflow-y-auto space-y-3 pr-2">
-                                <template x-for="log in nearmiss.slice(0,10)" :key="log.when + log.nik">
-                                    <div class="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border-l-4 border-blue-500">
-                                        <div class="flex-1">
-                                            <p class="text-[11px] font-bold text-slate-700">
-                                                <span class="text-blue-600" x-text="log.nama"></span> melaporkan temuan di <span x-text="log.where"></span>
-                                            </p>
-                                            <p class="text-[9px] text-slate-400 font-semibold" x-text="log.when"></p>
-                                        </div>
-                                        <span :class="log.note === 'Close' ? 'text-green-500' : 'text-red-500'" class="text-[9px] font-black uppercase" x-text="log.note"></span>
+                        <div class="bg-white p-8 rounded-[2.5rem] border shadow-sm h-80 flex flex-col">
+                            <h4 class="text-[10px] font-black text-slate-400 uppercase mb-4 text-center">Status Temuan (%)</h4>
+                            <div class="flex-1"><canvas id="pieChart"></canvas></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-[2.5rem] border shadow-sm">
+                        <h4 class="font-black text-slate-800 mb-4 uppercase text-xs tracking-widest">Log Aktivitas Terbaru</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <template x-for="log in nearmiss.slice(0,6)" :key="log.when + log.nik">
+                                <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border-l-4 border-blue-500">
+                                    <div class="flex-1">
+                                        <p class="text-[11px] font-bold text-slate-700">
+                                            <span class="text-blue-600" x-text="log.nama"></span> menemukan bahaya di <span x-text="log.where"></span>
+                                        </p>
+                                        <p class="text-[9px] text-slate-400 font-semibold" x-text="log.when"></p>
                                     </div>
-                                </template>
-                            </div>
+                                    <span :class="log.note === 'Close' ? 'text-green-500' : 'text-red-500'" class="text-[9px] font-black uppercase" x-text="log.note"></span>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </div>
 
                 <div x-show="page === 'data-karyawan'" class="space-y-4">
                     <div class="bg-white p-6 rounded-[2rem] border shadow-sm flex justify-between items-center">
-                        <input type="text" x-model="searchK" placeholder="Cari NIK/Nama/Line..." class="w-64 p-3 bg-slate-50 border rounded-xl outline-blue-600 text-sm">
-                        <button @click="openModal('karyawan')" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold">+ TAMBAH</button>
+                        <input type="text" x-model="searchK" placeholder="Cari NIK/Nama..." class="w-64 p-3 bg-slate-50 border rounded-xl outline-blue-600 text-sm">
+                        <button @click="openModal('karyawan')" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold">+ TAMBAH KARYAWAN</button>
                     </div>
                     <div class="bg-white rounded-[2rem] border overflow-hidden shadow-sm">
                         <table class="w-full text-sm text-left">
@@ -113,7 +126,7 @@
                                     <th class="p-5">NIK</th>
                                     <th class="p-5">Nama Karyawan</th>
                                     <th class="p-5">Line</th>
-                                    <th class="p-5">Status</th>
+                                    <th class="p-5 text-center">Sudah Lapor?</th>
                                     <th class="p-5 text-center">Aksi</th>
                                 </tr>
                             </thead>
@@ -123,7 +136,14 @@
                                         <td class="p-5 text-blue-600 font-black" x-text="k.nik"></td>
                                         <td class="p-5 text-slate-800" x-text="k.nama"></td>
                                         <td class="p-5 text-slate-500" x-text="k.line"></td>
-                                        <td class="p-5 text-[9px]"><span :class="k.statusK === 'Aktif' ? 'text-green-600' : 'text-slate-400'" x-text="k.statusK"></span></td>
+                                        <td class="p-5 text-center">
+                                            <template x-if="hasReported(k.nik)">
+                                                <span class="bg-green-100 text-green-600 p-1.5 rounded-full inline-block font-black">✓</span>
+                                            </template>
+                                            <template x-if="!hasReported(k.nik)">
+                                                <span class="text-slate-300">-</span>
+                                            </template>
+                                        </td>
                                         <td class="p-5 text-center space-x-2">
                                             <button @click="editKaryawan(k)" class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                                             <button @click="deleteData('karyawan', k)" class="p-2 bg-red-50 text-red-600 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
@@ -143,7 +163,7 @@
                             <button @click="currentFilter = 'open'" :class="currentFilter === 'open' ? 'bg-red-600 text-white' : 'text-slate-500'" class="px-5 py-2 rounded-xl text-xs font-black uppercase">PENDING</button>
                             <button @click="currentFilter = 'close'" :class="currentFilter === 'close' ? 'bg-green-600 text-white' : 'text-slate-500'" class="px-5 py-2 rounded-xl text-xs font-black uppercase">CLOSED</button>
                         </div>
-                        <button @click="openModal('nearmiss')" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-sm">+ LAPOR</button>
+                        <button @click="openModal('nearmiss')" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black text-sm">+ LAPOR ONLINE</button>
                     </div>
                     <div class="bg-white rounded-[2.5rem] border overflow-x-auto shadow-sm">
                         <table class="w-full text-[11px] text-left">
@@ -151,10 +171,9 @@
                                 <tr>
                                     <th class="p-5">NIK</th>
                                     <th class="p-5">Nama</th>
-                                    <th class="p-5">When (Kapan)</th>
-                                    <th class="p-5">Where (Dimana)</th>
+                                    <th class="p-5">When</th>
+                                    <th class="p-5">Where</th>
                                     <th class="p-5">Detail Bahaya</th>
-                                    <th class="p-5">Countermeasure</th>
                                     <th class="p-5 text-center">Status</th>
                                     <th class="p-5 text-center">Aksi</th>
                                 </tr>
@@ -167,7 +186,6 @@
                                         <td class="p-5" x-text="n.when"></td>
                                         <td class="p-5 italic text-slate-500" x-text="n.where"></td>
                                         <td class="p-5 max-w-xs truncate" x-text="n.detail"></td>
-                                        <td class="p-5 max-w-xs truncate" x-text="n.measure"></td>
                                         <td class="p-5 text-center">
                                             <span :class="n.note === 'Close' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'" class="px-4 py-1 rounded-full text-[9px] font-black uppercase" x-text="n.note"></span>
                                         </td>
@@ -191,11 +209,7 @@
             <div class="space-y-4">
                 <input type="text" x-model="formKaryawan.nik" placeholder="NIK" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold">
                 <input type="text" x-model="formKaryawan.nama" placeholder="Nama Lengkap" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold uppercase">
-                <input type="text" x-model="formKaryawan.line" placeholder="Line (Contoh: Painting 1)" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold uppercase">
-                <select x-model="formKaryawan.statusK" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold">
-                    <option value="Aktif">Aktif</option>
-                    <option value="Non-Aktif">Non-Aktif</option>
-                </select>
+                <input type="text" x-model="formKaryawan.line" placeholder="Line" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold uppercase">
                 <div class="flex gap-3 mt-6">
                     <button @click="showModalKaryawan = false" class="flex-1 py-4 font-bold text-slate-400">Batal</button>
                     <button @click="saveKaryawan()" class="flex-1 py-4 bg-blue-600 text-white font-black rounded-2xl">SIMPAN</button>
@@ -215,11 +229,11 @@
                         <template x-for="k in karyawan"><option :value="k.nik" x-text="k.nik + ' - ' + k.nama"></option></template>
                     </select>
                     <input type="date" x-model="formNearmiss.when" class="w-full p-4 bg-slate-50 border-2 rounded-2xl font-bold">
-                    <input type="text" x-model="formNearmiss.where" placeholder="Lokasi (Where)" class="w-full p-4 bg-slate-50 border-2 rounded-2xl font-bold uppercase">
+                    <input type="text" x-model="formNearmiss.where" placeholder="Lokasi" class="w-full p-4 bg-slate-50 border-2 rounded-2xl font-bold uppercase">
                 </div>
                 <div class="space-y-4">
-                    <textarea x-model="formNearmiss.detail" placeholder="Detail Bahaya (HIYARI HATTO)" class="w-full p-4 bg-slate-50 border-2 rounded-2xl font-bold h-24 uppercase"></textarea>
-                    <textarea x-model="formNearmiss.measure" placeholder="Countermeasure (Tindakan)" class="w-full p-4 bg-slate-50 border-2 rounded-2xl font-bold h-24 uppercase"></textarea>
+                    <textarea x-model="formNearmiss.detail" placeholder="Detail Bahaya" class="w-full p-4 bg-slate-50 border-2 rounded-2xl font-bold h-24 uppercase"></textarea>
+                    <textarea x-model="formNearmiss.measure" placeholder="Countermeasure" class="w-full p-4 bg-slate-50 border-2 rounded-2xl font-bold h-24 uppercase"></textarea>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-4 mt-6">
@@ -243,7 +257,7 @@
         return {
             isLoggedIn: false, sidebarOpen: true, page: 'dashboard', isSyncing: false, isEdit: false,
             currentFilter: 'all', searchQuery: '', searchK: '',
-            filterMonth: new Date().toISOString().slice(0, 7),
+            startDate: '', endDate: '',
             scriptURL: 'https://script.google.com/macros/s/AKfycbyiDWiXNU5YSxjaChZlCsXKe8JfzyWKZuGoAvGjDUQSezgeIf4kySfsd0BCEQnNlnJAJw/exec',
             karyawan: [], nearmiss: [], stats: { open: 0, close: 0 }, loginForm: { pass: '' },
             formKaryawan: { nik: '', nama: '', line: '', statusK: 'Aktif' },
@@ -263,13 +277,29 @@
                         detail: String(r[4]), measure: String(r[5]), targetDate: String(r[6]), note: String(r[7])
                     })).reverse();
                     this.updateDashboard();
-                } catch (e) { alert("Sinkronisasi Gagal. Periksa URL Anda."); }
+                } catch (e) { alert("Sinkronisasi Gagal."); }
                 finally { this.isSyncing = false; lucide.createIcons(); }
+            },
+
+            // Fungsi Checklist Status Lapor
+            hasReported(nik) {
+                return this.nearmiss.some(n => n.nik === String(nik));
             },
 
             get filteredK() {
                 const q = this.searchK.toLowerCase();
-                return this.karyawan.filter(k => k.nama.toLowerCase().includes(q) || k.nik.includes(q) || k.line.toLowerCase().includes(q));
+                return this.karyawan.filter(k => k.nama.toLowerCase().includes(q) || k.nik.includes(q));
+            },
+
+            get filteredNearmissDashboard() {
+                let base = this.nearmiss;
+                if (this.startDate && this.endDate) {
+                    base = base.filter(n => {
+                        const d = new Date(n.when);
+                        return d >= new Date(this.startDate) && d <= new Date(this.endDate);
+                    });
+                }
+                return base;
             },
 
             get filteredNearmiss() {
@@ -323,22 +353,58 @@
             },
 
             updateDashboard() {
-                this.stats.close = this.nearmiss.filter(n => n.note === 'Close').length;
-                this.stats.open = this.nearmiss.filter(n => n.note !== 'Close').length;
-                this.renderChart();
+                const base = this.filteredNearmissDashboard;
+                this.stats.close = base.filter(n => n.note === 'Close').length;
+                this.stats.open = base.filter(n => n.note !== 'Close').length;
+                this.renderCharts();
             },
 
-            renderChart() {
-                const ctx = document.getElementById('barChart');
-                if(!ctx) return;
-                if(window.myChart) window.myChart.destroy();
-                window.myChart = new Chart(ctx, {
-                    type: 'bar',
+            renderCharts() {
+                // 1. PIE CHART
+                const pieCtx = document.getElementById('pieChart');
+                if(window.myPie) window.myPie.destroy();
+                window.myPie = new Chart(pieCtx, {
+                    type: 'pie',
                     data: {
                         labels: ['Pending', 'Closed'],
-                        datasets: [{ data: [this.stats.open, this.stats.close], backgroundColor: ['#ef4444', '#22c55e'], borderRadius: 12 }]
+                        datasets: [{
+                            data: [this.stats.open, this.stats.close],
+                            backgroundColor: ['#ef4444', '#22c55e']
+                        }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+
+                // 2. FISCAL BAR CHART (APR - MAR)
+                const fiscalMonths = ['Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Jan', 'Feb', 'Mar'];
+                const monthlyData = new Array(12).fill(0);
+                
+                this.filteredNearmissDashboard.forEach(n => {
+                    const d = new Date(n.when);
+                    let m = d.getMonth(); // 0 = Jan
+                    // Geser index: Jan(0) jadi index 9, Apr(3) jadi index 0
+                    let fiscalIdx = (m >= 3) ? (m - 3) : (m + 9);
+                    monthlyData[fiscalIdx]++;
+                });
+
+                const barCtx = document.getElementById('barChart');
+                if(window.myBar) window.myBar.destroy();
+                window.myBar = new Chart(barCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: fiscalMonths,
+                        datasets: [{
+                            label: 'Jumlah Temuan',
+                            data: monthlyData,
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                    }
                 });
             },
 
