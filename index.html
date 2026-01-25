@@ -408,10 +408,24 @@
                 
                 if(this.isEdit) { 
                     fd.append('action', 'update'); 
+                    // WAJIB KIRIM KEDUA KUNCI INI:
                     fd.append('oldNik', this.originalData.nik); 
+                    fd.append('oldWhen', this.originalData.when); // TAMBAHKAN BARIS INI
                 } else {
                     fd.append('action', 'insert');
                 }
+
+                // Mengirim semua field terbaru
+                for(let key in this.formNearmiss) {
+                    fd.append(key, this.formNearmiss[key]);
+                }
+
+                try {
+                    const response = await fetch(this.scriptURL, { 
+                        method: 'POST', 
+                        body: fd 
+                    });
+                
 
                 // Mengirim semua field (nik, nama, when, where, detail, measure, targetDate, note)
                 for(let key in this.formNearmiss) {
