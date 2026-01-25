@@ -346,113 +346,99 @@
             editKaryawan(item) { this.isEdit = true; this.originalData = { nik: item.nik }; this.formKaryawan = { ...item }; this.showModalKaryawan = true; },
             editNearmiss(item) { this.isEdit = true; this.originalData = { nik: item.nik, when: item.when }; this.formNearmiss = { ...item }; this.showModalNearmiss = true; },
 
-            async deleteData(type, item) {
-                if (!confirm("Apakah Anda yakin ingin menghapus data NIK: " + item.nik + "?")) return;
-                
-                this.isSyncing = true;
-                const fd = new URLSearchParams();
-                fd.append('type', type);
-                fd.append('action', 'delete');
-                // Menggunakan oldNik karena script .gs mencari baris berdasarkan parameter ini
-                fd.append('oldNik', item.nik); 
-                
-                try {
-                    // Kita hapus mode: 'no-cors' agar bisa mendapatkan respon balik jika perlu
-                    await fetch(this.scriptURL, { method: 'POST', body: fd });
-                    alert("Data berhasil dihapus!");
-                    await this.syncAll();
-                } catch (e) {
-                    alert("Gagal menghapus data. Periksa koneksi internet.");
-                } finally {
-                    this.isSyncing = false;
-                }
-            },
+           async deleteData(type, item) {
+    if (!confirm("Apakah Anda yakin ingin menghapus data NIK: " + item.nik + "?")) return;
 
-            async saveKaryawan() {
-                if (!this.formKaryawan.nik || !this.formKaryawan.nama) return alert("NIK dan Nama wajib diisi!");
-                
-                this.isSyncing = true;
-                const fd = new URLSearchParams();
-                fd.append('type', 'karyawan');
-                
-                if(this.isEdit) { 
-                    fd.append('action', 'update'); 
-                    fd.append('oldNik', this.originalData.nik); 
-                } else {
-                    fd.append('action', 'insert');
-                }
-                
-                for(let key in this.formKaryawan) fd.append(key, this.formKaryawan[key]);
+    this.isSyncing = true;
+    const fd = new URLSearchParams();
+    fd.append('type', type);
+    fd.append('action', 'delete');
+    fd.append('oldNik', item.nik);
 
-                try {
-                    await fetch(this.scriptURL, { method: 'POST', body: fd });
-                    this.showModalKaryawan = false;
-                    await this.syncAll();
-                    alert("Data Karyawan Berhasil Disimpan/Diperbarui");
-                } catch (e) {
-                    alert("Gagal menyimpan data karyawan.");
-                } finally {
-                    this.isSyncing = false;
-                }
-            },
+    try {
+        await fetch(this.scriptURL, { method: 'POST', body: fd });
+        alert("Data berhasil dihapus!");
+        await this.syncAll();
+    } catch (e) {
+        alert("Gagal menghapus data. Periksa koneksi internet.");
+    } finally {
+        this.isSyncing = false;
+    }
+},
 
-            async saveNearmiss() {
-                const k = this.karyawan.find(i => i.nik === this.formNearmiss.nik);
-                if(!k) return alert("Silakan pilih karyawan terlebih dahulu!");
-                
-                this.isSyncing = true;
-                this.formNearmiss.nama = k.nama;
-                
-                const fd = new URLSearchParams();
-                fd.append('type', 'nearmiss');
-                
-                if(this.isEdit) { 
-                    fd.append('action', 'update'); 
-                    // WAJIB KIRIM KEDUA KUNCI INI:
-                    fd.append('oldNik', this.originalData.nik); 
-                    fd.append('oldWhen', this.originalData.when); // TAMBAHKAN BARIS INI
-                } else {
-                    fd.append('action', 'insert');
-                }
+async saveKaryawan() {
+    if (!this.formKaryawan.nik || !this.formKaryawan.nama) return alert("NIK dan Nama wajib diisi!");
 
-                // Mengirim semua field terbaru
-                for(let key in this.formNearmiss) {
-                    fd.append(key, this.formNearmiss[key]);
-                }
+    this.isSyncing = true;
+    const fd = new URLSearchParams();
+    fd.append('type', 'karyawan');
 
-                try {
-                    const response = await fetch(this.scriptURL, { 
-                        method: 'POST', 
-                        body: fd 
-                    });
-                
+    if (this.isEdit) {
+        fd.append('action', 'update');
+        fd.append('oldNik', this.originalData.nik);
+    } else {
+        fd.append('action', 'insert');
+    }
 
-                // Mengirim semua field (nik, nama, when, where, detail, measure, targetDate, note)
-                for(let key in this.formNearmiss) {
-                    fd.append(key, this.formNearmiss[key]);
-                }
+    for (let key in this.formKaryawan) fd.append(key, this.formKaryawan[key]);
 
-                try {
-                    const response = await fetch(this.scriptURL, { 
-                        method: 'POST', 
-                        body: fd 
-                    });
-                    const result = await response.text();
+    try {
+        await fetch(this.scriptURL, { method: 'POST', body: fd });
+        this.showModalKaryawan = false;
+        await this.syncAll();
+        alert("Data Karyawan Berhasil Disimpan/Diperbarui");
+    } catch (e) {
+        alert("Gagal menyimpan data karyawan.");
+    } finally {
+        this.isSyncing = false;
+    }
+},
 
-                    // Cek jika server mengirim pesan penolakan (aturan 30 hari)
-                    if (result.includes("Gagal")) {
-                        alert(result);
-                    } else {
-                        alert("Laporan Nearmiss Berhasil Diproses!");
-                        this.showModalNearmiss = false;
-                        await this.syncAll();
-                    }
-                } catch (e) {
-                    alert("Terjadi kesalahan sistem. Pastikan Deployment URL benar.");
-                } finally {
-                    this.isSyncing = false;
-                }
-            },
+async saveNearmiss() {
+    const k = this.karyawan.find(i => i.nik === this.formNearmiss.nik);
+    if (!k) return alert("Silakan pilih karyawan terlebih dahulu!");
+
+    this.isSyncing = true;
+    this.formNearmiss.nama = k.nama;
+
+    const fd = new URLSearchParams();
+    fd.append('type', 'nearmiss');
+
+    if (this.isEdit) {
+        fd.append('action', 'update');
+        // Kunci unik untuk Nearmiss biasanya kombinasi NIK dan Tanggal Kejadian (when)
+        fd.append('oldNik', this.originalData.nik);
+        fd.append('oldWhen', this.originalData.when); 
+    } else {
+        fd.append('action', 'insert');
+    }
+
+    // Mengirim semua field terbaru dari form
+    for (let key in this.formNearmiss) {
+        fd.append(key, this.formNearmiss[key]);
+    }
+
+    try {
+        const response = await fetch(this.scriptURL, {
+            method: 'POST',
+            body: fd
+        });
+        const result = await response.text();
+
+        // Cek jika server mengirim pesan penolakan (misal: aturan 30 hari)
+        if (result.includes("Gagal")) {
+            alert(result);
+        } else {
+            alert("Laporan Nearmiss Berhasil Diproses!");
+            this.showModalNearmiss = false;
+            await this.syncAll();
+        }
+    } catch (e) {
+        alert("Terjadi kesalahan sistem. Pastikan Deployment URL benar.");
+    } finally {
+        this.isSyncing = false;
+    }
+},
 
             updateDashboard() {
                 const base = this.filteredNearmissDashboard;
