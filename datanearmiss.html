@@ -13,13 +13,34 @@
 <body class="bg-slate-50" x-data="appData()" x-init="initApp('data-nearmiss')">
 
     <div class="flex h-screen w-full overflow-hidden">
-        <?php include 'layout_sidebar.php'; ?>
+        <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-[#0f172a] text-white transition-all duration-300 flex flex-col z-50">
+            <div class="p-6 flex items-center justify-between border-b border-slate-800/50">
+                <h1 x-show="sidebarOpen" class="font-black text-blue-400 text-lg uppercase tracking-tighter">Painting 2W</h1>
+                <button @click="sidebarOpen = !sidebarOpen" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400"><i data-lucide="menu"></i></button>
+            </div>
+            <nav class="flex-1 px-3 mt-6 space-y-2 font-bold">
+                <a href="dashboard.html" class="flex items-center w-full p-3.5 rounded-xl text-slate-400 hover:bg-slate-800 transition-all">
+                    <i data-lucide="layout-grid"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase tracking-widest">Dashboard</span>
+                </a>
+                <a href="datanearmiss.html" class="flex items-center w-full p-3.5 rounded-xl bg-blue-600 text-white shadow-lg transition-all">
+                    <i data-lucide="alert-triangle"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase tracking-widest">Nearmiss</span>
+                </a>
+                <a href="datakaryawan.html" class="flex items-center w-full p-3.5 rounded-xl text-slate-400 hover:bg-slate-800 transition-all">
+                    <i data-lucide="users"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase tracking-widest">Karyawan</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-slate-800">
+                <button @click="window.location.href='index.html'" class="flex items-center w-full p-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all font-bold">
+                    <i data-lucide="log-out"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase">Keluar</span>
+                </button>
+            </div>
+        </aside>
 
         <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
             <header class="bg-white border-b px-8 py-4 flex justify-between items-center z-40">
                 <h2 class="text-xl font-extrabold text-slate-800 uppercase italic">Laporan Nearmiss</h2>
                 <div class="flex items-center gap-4">
-                    <button @click="syncAll()" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold text-xs" 
+                    <button @click="loadData()" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest" 
                             x-text="isSyncing ? 'SINKRON...' : 'REFRESH'"></button>
                 </div>
             </header>
@@ -39,7 +60,7 @@
                             <button @click="currentFilter = 'close'" :class="currentFilter === 'close' ? 'bg-green-600 text-white shadow-lg' : 'text-slate-500'" class="px-5 py-2 rounded-xl text-[10px] font-black uppercase transition-all">CLOSED</button>
                         </div>
                         
-                        <button @click="openModal('nearmiss')" class="bg-[#0f172a] text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-slate-200">
+                        <button @click="openModal('nearmiss')" class="bg-[#0f172a] text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all">
                             + LAPOR ONLINE
                         </button>
                     </div>
@@ -77,10 +98,10 @@
                                             </td>
                                             <td class="p-6 text-center">
                                                 <div class="flex gap-2 justify-center">
-                                                    <button @click="editNearmiss(n)" class="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                                                    <button @click="editNearmiss(n)" class="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all">
                                                         <i data-lucide="edit-3" class="w-4 h-4"></i>
                                                     </button>
-                                                    <button @click="deleteData('nearmiss', n)" class="p-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm">
+                                                    <button @click="deleteNearmiss(idx)" class="p-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all">
                                                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                                                     </button>
                                                 </div>
@@ -96,7 +117,99 @@
         </div>
     </div>
 
-    <?php include 'layout_modals.php'; ?>
-    <?php include 'layout_footer_js.php'; ?>
+    <div x-show="modalNearmiss" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-2xl p-10 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <h3 class="text-xl font-black text-slate-800 mb-8 uppercase italic" x-text="isEdit ? 'Update Laporan' : 'Lapor Temuan Bahaya'"></h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="number" x-model="formN.nik" placeholder="NIK" class="p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-blue-600">
+                <input type="text" x-model="formN.nama" placeholder="NAMA LENGKAP" class="p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-blue-600">
+                <input type="date" x-model="formN.when" class="p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-blue-600">
+                <input type="text" x-model="formN.where" placeholder="LOKASI TEMUAN" class="p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-blue-600">
+                <textarea x-model="formN.detail" placeholder="DETAIL TEMUAN BAHAYA..." class="md:col-span-2 p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-blue-600 h-24"></textarea>
+                <textarea x-model="formN.measure" placeholder="COUNTERMEASURE (TINDAKAN)..." class="md:col-span-2 p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-blue-600 h-24"></textarea>
+                <select x-model="formN.note" class="md:col-span-2 p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-blue-600">
+                    <option value="Open">PENDING (OPEN)</option>
+                    <option value="Close">CLOSED</option>
+                </select>
+            </div>
+            <div class="flex gap-3 pt-6">
+                <button @click="modalNearmiss = false" class="flex-1 py-4 font-black text-slate-400 text-xs uppercase">Batal</button>
+                <button @click="saveNearmiss()" class="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-xl shadow-blue-200">Simpan Laporan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function appData() {
+            return {
+                sidebarOpen: true,
+                isSyncing: false,
+                searchQuery: '',
+                currentFilter: 'all',
+                nearmiss: [],
+                karyawan: [],
+                modalNearmiss: false,
+                isEdit: false,
+                formN: { nik: '', nama: '', when: '', where: '', detail: '', measure: '', note: 'Open' },
+
+                async initApp(page) {
+                    lucide.createIcons();
+                    await this.loadData();
+                },
+
+                async loadData() {
+                    this.isSyncing = true;
+                    const dataN = localStorage.getItem('nearmissData');
+                    const dataK = localStorage.getItem('karyawanData');
+                    this.nearmiss = dataN ? JSON.parse(dataN) : [];
+                    this.karyawan = dataK ? JSON.parse(dataK) : [];
+                    setTimeout(() => { this.isSyncing = false; }, 500);
+                },
+
+                get filteredNearmiss() {
+                    return this.nearmiss.filter(n => {
+                        const matchSearch = n.nama.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
+                                           n.nik.toString().includes(this.searchQuery) ||
+                                           n.where.toLowerCase().includes(this.searchQuery.toLowerCase());
+                        const matchStatus = this.currentFilter === 'all' || 
+                                           (this.currentFilter === 'open' && n.note !== 'Close') ||
+                                           (this.currentFilter === 'close' && n.note === 'Close');
+                        return matchSearch && matchStatus;
+                    });
+                },
+
+                openModal(type) {
+                    this.isEdit = false;
+                    this.formN = { nik: '', nama: '', when: '', where: '', detail: '', measure: '', note: 'Open' };
+                    this.modalNearmiss = true;
+                },
+
+                editNearmiss(data) {
+                    this.isEdit = true;
+                    this.formN = { ...data };
+                    this.modalNearmiss = true;
+                },
+
+                saveNearmiss() {
+                    if (this.isEdit) {
+                        const index = this.nearmiss.findIndex(n => n.nik === this.formN.nik && n.when === this.formN.when);
+                        if (index !== -1) this.nearmiss[index] = { ...this.formN };
+                    } else {
+                        this.nearmiss.unshift({ ...this.formN });
+                    }
+                    localStorage.setItem('nearmissData', JSON.stringify(this.nearmiss));
+                    this.modalNearmiss = false;
+                    alert('Laporan berhasil diperbarui!');
+                },
+
+                deleteNearmiss(idx) {
+                    if (confirm('Hapus laporan ini?')) {
+                        this.nearmiss.splice(idx, 1);
+                        localStorage.setItem('nearmissData', JSON.stringify(this.nearmiss));
+                    }
+                }
+            }
+        }
+    </script>
 </body>
 </html>
