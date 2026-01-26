@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>[x-cloak] { display: none !important; } body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
-<body class="bg-slate-50" x-data="appData()" x-init="initApp('data-nearmiss')">
+<body class="bg-slate-50" x-data="appData()" x-init="initApp()">
 
     <div class="flex h-screen w-full overflow-hidden">
         <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-[#0f172a] text-white transition-all duration-300 flex flex-col z-50">
@@ -30,7 +30,7 @@
                 </a>
             </nav>
             <div class="p-4 border-t border-slate-800">
-                <button @click="window.location.href='index.html'" class="flex items-center w-full p-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all font-bold">
+                <button @click="logout()" class="flex items-center w-full p-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all font-bold">
                     <i data-lucide="log-out"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase">Keluar</span>
                 </button>
             </div>
@@ -40,8 +40,9 @@
             <header class="bg-white border-b px-8 py-4 flex justify-between items-center z-40">
                 <h2 class="text-xl font-extrabold text-slate-800 uppercase italic">Laporan Nearmiss</h2>
                 <div class="flex items-center gap-4">
-                    <button @click="loadData()" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest" 
-                            x-text="isSyncing ? 'SINKRON...' : 'REFRESH'"></button>
+                    <button @click="loadData()" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:bg-blue-100" 
+                            :class="isSyncing ? 'animate-pulse' : ''"
+                            x-text="isSyncing ? 'SINKRON...' : 'REFRESH DATA'"></button>
                 </div>
             </header>
 
@@ -60,7 +61,7 @@
                             <button @click="currentFilter = 'close'" :class="currentFilter === 'close' ? 'bg-green-600 text-white shadow-lg' : 'text-slate-500'" class="px-5 py-2 rounded-xl text-[10px] font-black uppercase transition-all">CLOSED</button>
                         </div>
                         
-                        <button @click="openModal('nearmiss')" class="bg-[#0f172a] text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all">
+                        <button @click="openModal()" class="bg-[#0f172a] text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all">
                             + LAPOR ONLINE
                         </button>
                     </div>
@@ -85,16 +86,16 @@
                                                 <div class="text-blue-600 font-black" x-text="n.nik"></div>
                                                 <div class="text-slate-400 text-[10px]" x-text="n.nama"></div>
                                             </td>
-                                            <td class="p-6 text-center text-slate-500" x-text="n.when"></td>
+                                            <td class="p-6 text-center text-slate-500" x-text="n.when || n.tanggal"></td>
                                             <td class="p-6 max-w-xs">
-                                                <div class="text-slate-800" x-text="n.where"></div>
-                                                <div class="text-slate-400 font-medium normal-case line-clamp-1 italic" x-text="n.detail"></div>
+                                                <div class="text-slate-800" x-text="n.where || n.lokasi"></div>
+                                                <div class="text-slate-400 font-medium normal-case line-clamp-1 italic" x-text="n.detail || n.temuan"></div>
                                             </td>
-                                            <td class="p-6 max-w-xs truncate text-slate-500 normal-case" x-text="n.measure || '-'"></td>
+                                            <td class="p-6 max-w-xs truncate text-slate-500 normal-case" x-text="n.measure || n.tindakan || '-'"></td>
                                             <td class="p-6 text-center">
-                                                <span :class="n.note === 'Close' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'" 
+                                                <span :class="(n.note === 'Close' || n.status === 'Close') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'" 
                                                       class="px-4 py-1.5 rounded-full text-[9px] font-black uppercase inline-block w-24 text-center" 
-                                                      x-text="n.note === 'Close' ? 'CLOSED' : 'PENDING'"></span>
+                                                      x-text="(n.note === 'Close' || n.status === 'Close') ? 'CLOSED' : 'PENDING'"></span>
                                             </td>
                                             <td class="p-6 text-center">
                                                 <div class="flex gap-2 justify-center">
@@ -108,6 +109,9 @@
                                             </td>
                                         </tr>
                                     </template>
+                                    <tr x-show="filteredNearmiss.length === 0">
+                                        <td colspan="6" class="p-10 text-center text-slate-400 font-bold uppercase tracking-widest">Data Tidak Ditemukan / Sedang Memuat...</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -140,6 +144,9 @@
     </div>
 
     <script>
+        // MASUKKAN URL WEB APP GOOGLE SCRIPT ANDA DI SINI
+        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbyiDWiXNU5YSxjaChZlCsXKe8JfzyWKZuGoAvGjDUQSezgeIf4kySfsd0BCEQnNlnJAJw/exec";
+
         function appData() {
             return {
                 sidebarOpen: true,
@@ -147,38 +154,59 @@
                 searchQuery: '',
                 currentFilter: 'all',
                 nearmiss: [],
-                karyawan: [],
                 modalNearmiss: false,
                 isEdit: false,
                 formN: { nik: '', nama: '', when: '', where: '', detail: '', measure: '', note: 'Open' },
 
-                async initApp(page) {
+                async initApp() {
                     lucide.createIcons();
                     await this.loadData();
                 },
 
                 async loadData() {
                     this.isSyncing = true;
-                    const dataN = localStorage.getItem('nearmissData');
-                    const dataK = localStorage.getItem('karyawanData');
-                    this.nearmiss = dataN ? JSON.parse(dataN) : [];
-                    this.karyawan = dataK ? JSON.parse(dataK) : [];
-                    setTimeout(() => { this.isSyncing = false; }, 500);
+                    try {
+                        // Mengambil data LIVE dari Google Sheets API
+                        const response = await fetch(SPREADSHEET_API);
+                        const data = await response.json();
+                        
+                        // Mapping data nearmiss
+                        this.nearmiss = data.nearmiss || [];
+                        
+                        // Simpan backup ke localStorage
+                        localStorage.setItem('nearmissData', JSON.stringify(this.nearmiss));
+                    } catch (error) {
+                        console.error("Gagal sinkron data:", error);
+                        // Ambil data lokal jika internet gagal
+                        const localData = localStorage.getItem('nearmissData');
+                        if (localData) this.nearmiss = JSON.parse(localData);
+                    } finally {
+                        this.isSyncing = false;
+                        lucide.createIcons(); // Refresh icons
+                    }
                 },
 
                 get filteredNearmiss() {
                     return this.nearmiss.filter(n => {
-                        const matchSearch = n.nama.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
-                                           n.nik.toString().includes(this.searchQuery) ||
-                                           n.where.toLowerCase().includes(this.searchQuery.toLowerCase());
-                        const matchStatus = this.currentFilter === 'all' || 
-                                           (this.currentFilter === 'open' && n.note !== 'Close') ||
-                                           (this.currentFilter === 'close' && n.note === 'Close');
+                        const s = this.searchQuery.toLowerCase();
+                        const statusStr = (n.note || n.status || 'Open').toLowerCase();
+                        
+                        const matchSearch = 
+                            (n.nama?.toLowerCase().includes(s)) || 
+                            (n.nik?.toString().includes(s)) ||
+                            (n.where?.toLowerCase().includes(s)) ||
+                            (n.lokasi?.toLowerCase().includes(s));
+
+                        const matchStatus = 
+                            this.currentFilter === 'all' || 
+                            (this.currentFilter === 'open' && statusStr !== 'close') ||
+                            (this.currentFilter === 'close' && statusStr === 'close');
+
                         return matchSearch && matchStatus;
                     });
                 },
 
-                openModal(type) {
+                openModal() {
                     this.isEdit = false;
                     this.formN = { nik: '', nama: '', when: '', where: '', detail: '', measure: '', note: 'Open' };
                     this.modalNearmiss = true;
@@ -186,27 +214,42 @@
 
                 editNearmiss(data) {
                     this.isEdit = true;
-                    this.formN = { ...data };
+                    // Pastikan mapping field form sesuai dengan JSON sheet
+                    this.formN = { 
+                        nik: data.nik, 
+                        nama: data.nama, 
+                        when: data.when || data.tanggal, 
+                        where: data.where || data.lokasi, 
+                        detail: data.detail || data.temuan, 
+                        measure: data.measure || data.tindakan, 
+                        note: data.note || data.status || 'Open' 
+                    };
                     this.modalNearmiss = true;
                 },
 
                 saveNearmiss() {
+                    // Logic untuk simpan ke Lokal (Untuk simpan ke Google Sheets butuh fungsi POST di Apps Script)
                     if (this.isEdit) {
-                        const index = this.nearmiss.findIndex(n => n.nik === this.formN.nik && n.when === this.formN.when);
+                        const index = this.nearmiss.findIndex(n => n.nik === this.formN.nik && (n.when === this.formN.when || n.tanggal === this.formN.when));
                         if (index !== -1) this.nearmiss[index] = { ...this.formN };
                     } else {
                         this.nearmiss.unshift({ ...this.formN });
                     }
                     localStorage.setItem('nearmissData', JSON.stringify(this.nearmiss));
                     this.modalNearmiss = false;
-                    alert('Laporan berhasil diperbarui!');
+                    alert('Data diperbarui secara lokal. Pastikan Backend Apps Script dikonfigurasi untuk penyimpanan permanen.');
                 },
 
                 deleteNearmiss(idx) {
-                    if (confirm('Hapus laporan ini?')) {
+                    if (confirm('Hapus laporan ini secara lokal?')) {
                         this.nearmiss.splice(idx, 1);
                         localStorage.setItem('nearmissData', JSON.stringify(this.nearmiss));
                     }
+                },
+
+                logout() {
+                    localStorage.clear();
+                    window.location.href = 'index.html';
                 }
             }
         }
