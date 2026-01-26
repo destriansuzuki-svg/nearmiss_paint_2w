@@ -41,7 +41,7 @@
         </div>
 
         <div class="mt-10 pt-6 border-t border-slate-100 text-slate-400 text-[11px] font-semibold">
-            <p>&copy; 2024 - Painting 2W Development</p>
+            <p>&copy; 2026 - Painting 2W Development</p>
         </div>
     </div>
 
@@ -49,23 +49,30 @@
         function handleLogin() {
             const pw = document.getElementById('pw').value;
             
+            // Pengalihan disesuaikan ke file .html untuk GitHub Pages
             if (pw === 'admin') {
-                // Simpan status admin di localStorage
                 localStorage.setItem('role', 'admin');
                 localStorage.setItem('isLoggedIn', 'true');
-                window.location.href = 'dashboard.php';
+                window.location.href = 'dashboard.html'; 
             } 
             else if (pw === 'user') {
-                // Simpan status user di localStorage
                 localStorage.setItem('role', 'user');
                 localStorage.setItem('isLoggedIn', 'true');
-                window.location.href = 'datanearmiss.php';
+                window.location.href = 'datanearmiss.html';
             } 
             else {
                 alert('Password Salah! Gunakan "admin" atau "user"');
                 document.getElementById('pw').value = '';
             }
         }
+
+        // Cek jika sudah login, langsung lempar ke dashboard (opsional)
+        window.onload = () => {
+            if (localStorage.getItem('isLoggedIn') === 'true') {
+                const role = localStorage.getItem('role');
+                window.location.href = (role === 'admin') ? 'dashboard.html' : 'datanearmiss.html';
+            }
+        };
     </script>
 </body>
 </html>
