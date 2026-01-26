@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Painting 2W Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-effect { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-[#0f172a] flex items-center justify-center min-h-screen px-4">
+    
+    <div class="fixed top-0 left-0 w-64 h-64 bg-blue-600 rounded-full filter blur-[120px] opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
+    <div class="fixed bottom-0 right-0 w-96 h-96 bg-blue-500 rounded-full filter blur-[150px] opacity-20 translate-x-1/2 translate-y-1/2"></div>
+
+    <div class="glass-effect p-10 rounded-[3rem] shadow-2xl w-full max-w-md text-center relative z-10 border border-white/20">
+        <div class="mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-3xl mb-4 shadow-xl shadow-blue-500/30">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04a11.357 11.357 0 00-1.573 11.37c1.29 3.56 4.308 5.676 7.691 5.681a11.575 11.575 0 008.122-3.475c.995-1.01 1.631-2.27 1.838-3.585a11.36 11.36 0 00-1.242-10.041z" />
+                </svg>
+            </div>
+            <h2 class="text-3xl font-black text-slate-800 tracking-tight">PAINTING 2W</h2>
+            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em] mt-2">Safety Management System</p>
+        </div>
+
+        <div class="space-y-4">
+            <div class="relative">
+                <input type="password" id="pw" placeholder="Masukkan Password" 
+                    class="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-blue-600 font-bold text-center text-lg transition-all focus:bg-white focus:shadow-inner"
+                    onkeypress="if(event.key === 'Enter') handleLogin()">
+            </div>
+            
+            <button onclick="handleLogin()" 
+                class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 active:scale-[0.98] transition-all shadow-xl shadow-blue-200">
+                Masuk ke Sistem
+            </button>
+        </div>
+
+        <div class="mt-10 pt-6 border-t border-slate-100 text-slate-400 text-[11px] font-semibold">
+            <p>&copy; 2024 - Painting 2W Development</p>
+        </div>
+    </div>
+
+    <script>
+        function handleLogin() {
+            const pw = document.getElementById('pw').value;
+            
+            if (pw === 'admin') {
+                // Simpan status admin di localStorage
+                localStorage.setItem('role', 'admin');
+                localStorage.setItem('isLoggedIn', 'true');
+                window.location.href = 'dashboard.php';
+            } 
+            else if (pw === 'user') {
+                // Simpan status user di localStorage
+                localStorage.setItem('role', 'user');
+                localStorage.setItem('isLoggedIn', 'true');
+                window.location.href = 'datanearmiss.php';
+            } 
+            else {
+                alert('Password Salah! Gunakan "admin" atau "user"');
+                document.getElementById('pw').value = '';
+            }
+        }
+    </script>
+</body>
+</html>
