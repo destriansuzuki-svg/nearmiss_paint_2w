@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>[x-cloak] { display: none !important; } body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
-<body class="bg-slate-50" x-data="appData()" x-init="initApp('karyawan')">
+<body class="bg-slate-50" x-data="appData()" x-init="initApp()">
 
     <div class="flex h-screen w-full overflow-hidden">
         <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-[#0f172a] text-white transition-all duration-300 flex flex-col z-50">
@@ -41,6 +41,7 @@
                 <h2 class="text-xl font-extrabold text-slate-800 uppercase italic">Master Data Karyawan</h2>
                 <div class="flex items-center gap-4">
                     <button @click="loadData()" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest" 
+                            :disabled="isSyncing"
                             x-text="isSyncing ? 'SINKRON...' : 'REFRESH DATA'"></button>
                 </div>
             </header>
@@ -53,7 +54,7 @@
                             <input type="text" x-model="searchK" placeholder="Cari NIK atau Nama Karyawan..." 
                                    class="w-full pl-12 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-blue-600 font-semibold text-sm transition-all focus:bg-white shadow-inner">
                         </div>
-                        <button @click="openModal('karyawan')" class="w-full md:w-auto bg-[#0f172a] text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-blue-600 transition-all shadow-xl shadow-slate-200">
+                        <button @click="openModal()" class="w-full md:w-auto bg-[#0f172a] text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-blue-600 transition-all shadow-xl shadow-slate-200">
                             + TAMBAH ANGGOTA
                         </button>
                     </div>
@@ -94,7 +95,7 @@
                                                     <button @click="editKaryawan(k)" class="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm">
                                                         <i data-lucide="pencil" class="w-4 h-4"></i>
                                                     </button>
-                                                    <button @click="deleteData('karyawan', k)" class="p-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm">
+                                                    <button @click="deleteKaryawan(k)" class="p-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm">
                                                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                                                     </button>
                                                 </div>
@@ -119,13 +120,17 @@
                 <input type="text" x-model="formK.line" placeholder="LINE / POS" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-blue-600 transition-all focus:bg-white">
                 <div class="flex gap-3 pt-4">
                     <button @click="modalKaryawan = false" class="flex-1 py-4 font-black text-slate-400 text-xs uppercase hover:text-slate-600 transition-all">Batal</button>
-                    <button @click="saveKaryawan()" class="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-xl shadow-blue-200 active:scale-95 transition-all">Simpan Data</button>
+                    <button @click="saveKaryawan()" class="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-xl shadow-blue-200 active:scale-95 transition-all" 
+                            :disabled="isSyncing" x-text="isSyncing ? 'Memproses...' : 'Simpan Data'"></button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // MASUKKAN URL WEB APP GOOGLE SCRIPT ANDA DI SINI
+        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbyiDWiXNU5YSxjaChZlCsXKe8JfzyWKZuGoAvGjDUQSezgeIf4kySfsd0BCEQnNlnJAJw/exec";
+
         function appData() {
             return {
                 sidebarOpen: true,
@@ -135,47 +140,111 @@
                 karyawan: [],
                 modalKaryawan: false,
                 isEdit: false,
+                oldNik: null,
                 formK: { nik: '', nama: '', line: '' },
 
-                initApp(page) {
+                initApp() {
                     lucide.createIcons();
                     this.loadData();
                 },
 
                 async loadData() {
                     this.isSyncing = true;
-                    // Simulasi atau Fetch dari LocalStorage/API
-                    const cachedK = localStorage.getItem('karyawanData');
-                    const cachedN = localStorage.getItem('nearmissData');
-                    if(cachedK) this.karyawan = JSON.parse(cachedK);
-                    if(cachedN) this.nearmiss = JSON.parse(cachedN);
-                    
-                    setTimeout(() => { this.isSyncing = false; }, 800);
+                    try {
+                        const response = await fetch(SPREADSHEET_API);
+                        const data = await response.json();
+                        
+                        this.karyawan = data.karyawan || [];
+                        this.nearmiss = data.nearmiss || [];
+                        
+                        localStorage.setItem('karyawanData', JSON.stringify(this.karyawan));
+                        localStorage.setItem('nearmissData', JSON.stringify(this.nearmiss));
+                    } catch (error) {
+                        console.error("Gagal load data cloud, gunakan cache:", error);
+                        const cached = localStorage.getItem('karyawanData');
+                        if (cached) this.karyawan = JSON.parse(cached);
+                    } finally {
+                        this.isSyncing = false;
+                        setTimeout(() => lucide.createIcons(), 100);
+                    }
                 },
 
                 get filteredK() {
                     return this.karyawan.filter(k => 
-                        k.nama.toLowerCase().includes(this.searchK.toLowerCase()) || 
-                        k.nik.toString().includes(this.searchK)
+                        (k.nama && k.nama.toLowerCase().includes(this.searchK.toLowerCase())) || 
+                        (k.nik && k.nik.toString().includes(this.searchK))
                     );
                 },
 
                 hasReported(nik) {
-                    return this.nearmiss.some(n => n.nik.toString() === nik.toString());
+                    if (!nik) return false;
+                    return this.nearmiss.some(n => n.nik && n.nik.toString() === nik.toString());
                 },
 
-                openModal(type) {
+                openModal() {
                     this.isEdit = false;
                     this.formK = { nik: '', nama: '', line: '' };
                     this.modalKaryawan = true;
                 },
 
-                saveKaryawan() {
+                editKaryawan(k) {
+                    this.isEdit = true;
+                    this.oldNik = k.nik;
+                    this.formK = { ...k };
+                    this.modalKaryawan = true;
+                },
+
+                async saveKaryawan() {
                     if(!this.formK.nik || !this.formK.nama) return alert('NIK dan Nama wajib diisi!');
-                    this.karyawan.push({...this.formK});
-                    localStorage.setItem('karyawanData', JSON.stringify(this.karyawan));
-                    this.modalKaryawan = false;
-                    alert('Berhasil disimpan ke browser (Simulasi)');
+                    
+                    this.isSyncing = true;
+                    const params = new URLSearchParams();
+                    params.append('type', 'karyawan'); 
+                    params.append('action', this.isEdit ? 'update' : 'insert');
+                    params.append('nik', this.formK.nik);
+                    params.append('nama', this.formK.nama);
+                    params.append('line', this.formK.line);
+                    if (this.isEdit) params.append('oldNik', this.oldNik);
+
+                    try {
+                        await fetch(SPREADSHEET_API, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            body: params
+                        });
+                        
+                        this.modalKaryawan = false;
+                        alert('Data berhasil diproses ke cloud!');
+                        // Delay sedikit agar Google Sheet selesai menulis sebelum refresh
+                        setTimeout(() => this.loadData(), 1500);
+                    } catch (error) {
+                        alert('Error koneksi!');
+                    } finally {
+                        this.isSyncing = false;
+                    }
+                },
+
+                async deleteKaryawan(k) {
+                    if (!confirm(`Hapus data ${k.nama}?`)) return;
+                    
+                    this.isSyncing = true;
+                    const params = new URLSearchParams();
+                    params.append('type', 'karyawan');
+                    params.append('action', 'delete');
+                    params.append('oldNik', k.nik);
+
+                    try {
+                        await fetch(SPREADSHEET_API, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            body: params
+                        });
+                        alert('Data dihapus!');
+                        setTimeout(() => this.loadData(), 1500);
+                    } catch (error) {
+                        alert('Gagal menghapus!');
+                        this.isSyncing = false;
+                    }
                 }
             }
         }
