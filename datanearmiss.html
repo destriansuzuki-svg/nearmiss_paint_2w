@@ -146,6 +146,8 @@
     <script>
         // MASUKKAN URL WEB APP GOOGLE SCRIPT ANDA DI SINI
        <script>
+<script>
+    // URL WEB APP GOOGLE SCRIPT
     const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbyiDWiXNU5YSxjaChZlCsXKe8JfzyWKZuGoAvGjDUQSezgeIf4kySfsd0BCEQnNlnJAJw/exec";
 
     function appData() {
@@ -157,7 +159,7 @@
             nearmiss: [],
             modalNearmiss: false,
             isEdit: false,
-            oldData: null, // Untuk menyimpan referensi data sebelum diedit
+            oldData: null,
             formN: { nik: '', nama: '', when: '', where: '', detail: '', measure: '', note: 'Open' },
 
             async initApp() {
@@ -168,7 +170,8 @@
             async loadData() {
                 this.isSyncing = true;
                 try {
-                    const response = await fetch(SPREADSHEET_API);
+                    // Menambahkan timestamp (?t=...) agar browser tidak mengambil data lama dari cache
+                    const response = await fetch(`${SPREADSHEET_API}?t=${new Date().getTime()}`);
                     const data = await response.json();
                     this.nearmiss = data.nearmiss || [];
                     localStorage.setItem('nearmissData', JSON.stringify(this.nearmiss));
@@ -185,9 +188,18 @@
             get filteredNearmiss() {
                 return this.nearmiss.filter(n => {
                     const s = this.searchQuery.toLowerCase();
-                    const statusStr = (n.note || n.status || 'Open').toLowerCase();
-                    const matchSearch = (n.nama?.toLowerCase().includes(s)) || (n.nik?.toString().includes(s)) || (n.where?.toLowerCase().includes(s));
-                    const matchStatus = this.currentFilter === 'all' || (this.currentFilter === 'open' && statusStr !== 'close') || (this.currentFilter === 'close' && statusStr === 'close');
+                    // Normalisasi status untuk filter (mendukung kolom 'note' atau 'status')
+                    const statusVal = (n.note || n.status || 'Open').toLowerCase();
+                    
+                    const matchSearch = (n.nama?.toLowerCase().includes(s)) || 
+                                       (n.nik?.toString().includes(s)) || 
+                                       (n.where?.toLowerCase().includes(s)) ||
+                                       (n.lokasi?.toLowerCase().includes(s));
+
+                    const matchStatus = this.currentFilter === 'all' || 
+                                       (this.currentFilter === 'open' && statusVal !== 'close') || 
+                                       (this.currentFilter === 'close' && statusVal === 'close');
+                    
                     return matchSearch && matchStatus;
                 });
             },
@@ -200,7 +212,7 @@
 
             editNearmiss(data) {
                 this.isEdit = true;
-                this.oldData = { ...data }; // Simpan data lama untuk pencarian di Apps Script
+                this.oldData = { ...data };
                 this.formN = { 
                     nik: data.nik, 
                     nama: data.nama, 
@@ -214,14 +226,15 @@
             },
 
             async saveNearmiss() {
+                if(!this.formN.nik || !this.formN.nama) return alert("NIK dan Nama wajib diisi!");
+                
                 this.isSyncing = true;
                 const params = new URLSearchParams();
                 
-                // Header wajib untuk Apps Script doPost
                 params.append('type', 'nearmiss'); 
                 params.append('action', this.isEdit ? 'update' : 'insert');
                 
-                // Data Form
+                // Data Form dikirim sesuai nama parameter di Apps Script
                 params.append('nik', this.formN.nik);
                 params.append('nama', this.formN.nama);
                 params.append('when', this.formN.when);
@@ -230,25 +243,25 @@
                 params.append('measure', this.formN.measure);
                 params.append('note', this.formN.note);
 
-                // Jika update, kirim identitas data lama
                 if (this.isEdit) {
                     params.append('oldNik', this.oldData.nik);
                     params.append('oldWhen', this.oldData.when || this.oldData.tanggal);
                 }
 
                 try {
-                    const response = await fetch(SPREADSHEET_API, {
+                    await fetch(SPREADSHEET_API, {
                         method: 'POST',
-                        mode: 'no-cors', // Penting untuk Apps Script
+                        mode: 'no-cors', 
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: params
                     });
                     
-                    alert('Permintaan berhasil dikirim ke Google Sheets!');
+                    alert('Data berhasil diproses! Mohon tunggu beberapa detik untuk sinkronisasi Google Sheets.');
                     this.modalNearmiss = false;
-                    await this.loadData(); // Refresh tabel
+                    // Beri jeda 2 detik sebelum refresh agar Google Sheets selesai menulis data
+                    setTimeout(() => this.loadData(), 2000); 
                 } catch (error) {
-                    alert('Gagal menyimpan ke Google Sheets');
+                    alert('Gagal mengirim data.');
                     console.error(error);
                 } finally {
                     this.isSyncing = false;
@@ -256,9 +269,9 @@
             },
 
             async deleteNearmiss(idx) {
-                if (!confirm('Hapus laporan ini secara permanen di Google Sheets?')) return;
+                if (!confirm('Hapus laporan ini secara permanen?')) return;
                 
-                const dataToDelete = this.nearmiss[idx];
+                const dataToDelete = this.filteredNearmiss[idx];
                 this.isSyncing = true;
                 
                 const params = new URLSearchParams();
@@ -275,7 +288,7 @@
                         body: params
                     });
                     alert('Data dihapus!');
-                    await this.loadData();
+                    setTimeout(() => this.loadData(), 1500);
                 } catch (error) {
                     alert('Gagal menghapus data');
                 } finally {
