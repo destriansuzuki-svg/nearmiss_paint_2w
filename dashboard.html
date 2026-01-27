@@ -85,104 +85,103 @@
 
     <script>
         // GANTI INI DENGAN URL WEB APP GOOGLE SCRIPT KAMU
-        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbyiDWiXNU5YSxjaChZlCsXKe8JfzyWKZuGoAvGjDUQSezgeIf4kySfsd0BCEQnNlnJAJw/exec";
+        // GANTI INI DENGAN URL WEB APP GOOGLE SCRIPT KAMU
+const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbyiDWiXNU5YSxjaChZlCsXKe8JfzyWKZuGoAvGjDUQSezgeIf4kySfsd0BCEQnNlnJAJw/exec";
 
-        function appData() {
-            return {
-                sidebarOpen: true,
-                isSyncing: false,
-                nearmiss: [],
-                karyawan: [],
-                charts: {},
+function appData() {
+    return {
+        sidebarOpen: true,
+        isSyncing: false,
+        nearmiss: [],
+        karyawan: [],
+        charts: {},
 
-                async initApp() {
-                    lucide.createIcons();
-                    await this.loadData();
-                },
+        async initApp() {
+            lucide.createIcons();
+            await this.loadData();
+        },
 
-                async loadData() {
-                    this.isSyncing = true;
-                    try {
-                        // Mengambil data dari Google Sheets API
-                        // Tambahkan parameter ?action=getDashboard jika script kamu mendukung multi-action
-                        const response = await fetch(SPREADSHEET_API);
-                        const data = await response.json();
-                        
-                        this.nearmiss = data.nearmiss || [];
-                        this.karyawan = data.karyawan || [];
-                        
-                        this.renderCharts();
-                    } catch (error) {
-                        console.error("Gagal sinkron data:", error);
-                        alert("Gagal mengambil data dari Google Sheets. Pastikan URL API benar.");
-                    } finally {
-                        this.isSyncing = false;
-                    }
-                },
-
-                countPending() {
-                    return this.nearmiss.filter(n => n.status?.toLowerCase() !== 'close').length;
-                },
-
-                countClosed() {
-                    return this.nearmiss.filter(n => n.status?.toLowerCase() === 'close').length;
-                },
-
-                renderCharts() {
-                    // Hancurkan chart lama jika ada (mencegah tumpah tindih saat refresh)
-                    if (this.charts.bar) this.charts.bar.destroy();
-                    if (this.charts.pie) this.charts.pie.destroy();
-
-                    const ctxBar = document.getElementById('barChart').getContext('2d');
-                    this.charts.bar = new Chart(ctxBar, {
-                        type: 'bar',
-                        data: {
-                            labels: ['Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Jan', 'Feb', 'Mar'],
-                            datasets: [{
-                                label: 'Jumlah Temuan',
-                                data: this.mapMonthlyData(), // Fungsi mapping data asli
-                                backgroundColor: '#2563eb',
-                                borderRadius: 10
-                            }]
-                        },
-                        options: { responsive: true, maintainAspectRatio: false }
-                    });
-
-                    const ctxPie = document.getElementById('pieChart').getContext('2d');
-                    this.charts.pie = new Chart(ctxPie, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Open', 'Close'],
-                            datasets: [{
-                                data: [this.countPending(), this.countClosed()],
-                                backgroundColor: ['#ef4444', '#22c55e']
-                            }]
-                        },
-                        options: { responsive: true, maintainAspectRatio: false }
-                    });
-                },
-
-                mapMonthlyData() {
-                    // Logic sederhana untuk menghitung temuan per bulan dari data Google Sheets
-                    const monthlyCounts = new Array(12).fill(0);
-                    this.nearmiss.forEach(n => {
-                        const date = new Date(n.tanggal);
-                        if (!isNaN(date)) {
-                            // Penyesuaian bulan fiskal Apr=0, Mei=1...
-                            let monthIdx = date.getMonth() - 3;
-                            if (monthIdx < 0) monthIdx += 12;
-                            monthlyCounts[monthIdx]++;
-                        }
-                    });
-                    return monthlyCounts;
-                },
-
-                logout() {
-                    localStorage.clear();
-                    window.location.href = 'index.html';
-                }
+        async loadData() {
+            this.isSyncing = true;
+            try {
+                // Tambahkan Timestamp agar data tidak tersangkut di cache browser
+                const response = await fetch(`${SPREADSHEET_API}?t=${new Date().getTime()}`);
+                const data = await response.json();
+                
+                this.nearmiss = data.nearmiss || [];
+                this.karyawan = data.karyawan || [];
+                
+                this.renderCharts();
+            } catch (error) {
+                console.error("Gagal sinkron data:", error);
+            } finally {
+                this.isSyncing = false;
             }
+        },
+
+        countPending() {
+            // Di Apps Script, status Open/Close ada di properti 'note' atau 'status'
+            // Kita cek n.note (sesuai standar doPost kita sebelumnya)
+            return this.nearmiss.filter(n => n.note?.toLowerCase() !== 'close' && n.note?.toLowerCase() !== 'closed').length;
+        },
+
+        countClosed() {
+            return this.nearmiss.filter(n => n.note?.toLowerCase() === 'close' || n.note?.toLowerCase() === 'closed').length;
+        },
+
+        renderCharts() {
+            if (this.charts.bar) this.charts.bar.destroy();
+            if (this.charts.pie) this.charts.pie.destroy();
+
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            this.charts.bar = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Jan', 'Feb', 'Mar'],
+                    datasets: [{
+                        label: 'Jumlah Temuan',
+                        data: this.mapMonthlyData(),
+                        backgroundColor: '#2563eb',
+                        borderRadius: 10
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            this.charts.pie = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Open', 'Close'],
+                    datasets: [{
+                        data: [this.countPending(), this.countClosed()],
+                        backgroundColor: ['#ef4444', '#22c55e']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        },
+
+        mapMonthlyData() {
+            const monthlyCounts = new Array(12).fill(0);
+            this.nearmiss.forEach(n => {
+                // REVISI: Menggunakan n.when karena itu nama properti dari Apps Script
+                const date = new Date(n.when); 
+                if (!isNaN(date)) {
+                    let monthIdx = date.getMonth() - 3; // Fiskal Apr = 0
+                    if (monthIdx < 0) monthIdx += 12;
+                    monthlyCounts[monthIdx]++;
+                }
+            });
+            return monthlyCounts;
+        },
+
+        logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
         }
+    }
+}
     </script>
 </body>
 </html>
