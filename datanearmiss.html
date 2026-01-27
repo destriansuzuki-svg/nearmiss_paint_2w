@@ -20,40 +20,48 @@
 <body class="bg-slate-50 text-slate-900" x-data="appData()" x-init="initApp()">
 
     <div class="flex h-screen w-full overflow-hidden">
-        <aside :class="sidebarOpen ? 'w-72' : 'w-24'" class="bg-[#0f172a] text-white transition-all duration-300 flex flex-col z-50">
-            <div class="p-8 flex items-center justify-between">
-                <div x-show="sidebarOpen" class="flex items-center gap-2">
-                    <span class="font-black text-blue-500 text-xl tracking-tighter uppercase">Painting 2W</span>
-                </div>
-                <button @click="sidebarOpen = !sidebarOpen" class="p-2 hover:bg-slate-800 rounded-xl text-slate-400">
-                    <i data-lucide="menu" class="w-6 h-6"></i>
-                </button>
+<aside :class="sidebarOpen ? 'w-72' : 'w-24'" class="bg-[#0f172a] text-white transition-all duration-300 flex flex-col z-50">
+    <div class="p-8 flex items-center justify-between">
+        <div x-show="sidebarOpen" class="flex items-center">
+            <h1 class="font-black text-blue-500 text-2xl tracking-tighter uppercase italic">
+                PAINTING<span class="text-white">2W</span>
+            </h1>
+        </div>
+        <button @click="sidebarOpen = !sidebarOpen" class="p-2 hover:bg-slate-800 rounded-xl text-slate-400">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+    </div>
+
+    <nav class="flex-1 px-4 mt-6 space-y-4">
+        <a href="dashboard.html" class="flex items-center w-full p-4 rounded-2xl text-slate-400 hover:bg-slate-800 transition-all font-bold group">
+            <div class="p-2 group-hover:bg-slate-700 rounded-lg transition-colors">
+                <i data-lucide="layout-grid" class="w-6 h-6"></i>
             </div>
-
-            <nav class="flex-1 px-4 mt-4 space-y-3">
-                <a href="dashboard.html" class="flex items-center w-full p-4 rounded-2xl text-slate-400 hover:bg-slate-800 transition-all font-bold">
-                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
-                    <span x-show="sidebarOpen" class="ml-4 text-sm tracking-widest uppercase">Dashboard</span>
-                </a>
-                
-                <a href="datanearmiss.html" class="flex items-center w-full p-4 rounded-2xl bg-blue-600 text-white shadow-[0_10px_20px_-5px_rgba(37,99,235,0.4)] transition-all font-bold">
-                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-                    <span x-show="sidebarOpen" class="ml-4 text-sm tracking-widest uppercase">Nearmiss</span>
-                </a>
-
-                <a href="datakaryawan.html" class="flex items-center w-full p-4 rounded-2xl text-slate-400 hover:bg-slate-800 transition-all font-bold">
-                    <i data-lucide="users" class="w-5 h-5"></i>
-                    <span x-show="sidebarOpen" class="ml-4 text-sm tracking-widest uppercase">Karyawan</span>
-                </a>
-            </nav>
-
-            <div class="p-6 border-t border-slate-800/50">
-                <button @click="logout()" class="flex items-center w-full p-4 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all font-bold">
-                    <i data-lucide="log-out" class="w-5 h-5"></i>
-                    <span x-show="sidebarOpen" class="ml-4 text-sm uppercase">Keluar</span>
-                </button>
+            <span x-show="sidebarOpen" class="ml-4 text-sm tracking-widest uppercase">DASHBOARD</span>
+        </a>
+        
+        <a href="datanearmiss.html" class="flex items-center w-full p-4 rounded-2xl bg-blue-600 text-white shadow-[0_10px_25px_-5px_rgba(37,99,235,0.4)] transition-all font-bold">
+            <div class="p-2 bg-blue-500/30 rounded-lg">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
             </div>
-        </aside>
+            <span x-show="sidebarOpen" class="ml-4 text-sm tracking-widest uppercase">NEARMISS</span>
+        </a>
+
+        <a href="datakaryawan.html" class="flex items-center w-full p-4 rounded-2xl text-slate-400 hover:bg-slate-800 transition-all font-bold group">
+            <div class="p-2 group-hover:bg-slate-700 rounded-lg transition-colors">
+                <i data-lucide="users" class="w-6 h-6"></i>
+            </div>
+            <span x-show="sidebarOpen" class="ml-4 text-sm tracking-widest uppercase">KARYAWAN</span>
+        </a>
+    </nav>
+
+    <div class="p-6 border-t border-slate-800/50">
+        <button @click="logout()" class="flex items-center w-full p-4 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all font-bold group">
+            <i data-lucide="log-out" class="w-6 h-6 group-hover:scale-110 transition-transform"></i>
+            <span x-show="sidebarOpen" class="ml-4 text-sm uppercase tracking-widest">KELUAR</span>
+        </button>
+    </div>
+</aside>
 
         <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
             <header class="bg-white border-b border-slate-100 px-10 py-6 flex justify-between items-center z-40">
