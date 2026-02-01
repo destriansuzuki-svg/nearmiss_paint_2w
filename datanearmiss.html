@@ -44,6 +44,13 @@
                     <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Karyawan</span>
                 </a>
             </nav>
+
+            <div class="p-3 border-t border-slate-800">
+                <button @click="logout()" class="flex items-center w-full px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all font-bold">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Keluar</span>
+                </button>
+            </div>
         </aside>
 
         <div class="flex-1 flex flex-col min-w-0">
@@ -124,10 +131,6 @@
                                 </template>
                             </tbody>
                         </table>
-                        <div x-show="filteredNearmiss.length === 0" class="py-20 text-center opacity-20">
-                            <i data-lucide="database" class="w-12 h-12 mx-auto mb-2"></i>
-                            <p class="text-[10px] font-black uppercase tracking-widest">Data Tidak Ditemukan</p>
-                        </div>
                     </div>
                 </div>
             </main>
@@ -185,7 +188,6 @@
     </div>
 
     <script>
-        // MASUKKAN URL BARU ANDA DI SINI
         const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbwlvT2uodaiijE_nNuKXPbasI0gvtSE9vQTDOtRjFshr3RyvW9eIR8B17NVIVwUK5zfiw/exec";
 
         function nearmissApp() {
@@ -193,11 +195,22 @@
                 sidebarOpen: true, isSyncing: false, showForm: false, isEdit: false,
                 searchQuery: '', currentFilter: 'all', filterDateStart: '', filterDateEnd: '',
                 nearmiss: [],
-                formData: { NIK: '', Nama: '', When: '', where: '', detail: '', measure: '', tergetdate: '', note: 'Open' },
+                karyawan: [], // Simpan data master karyawan
+                formData: { NIK: '', Nama: '', When: '', where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close' },
 
                 async initApp() {
                     lucide.createIcons();
                     await this.loadData();
+
+                    // REVISI: Watcher untuk Auto-fill Nama berdasarkan NIK
+                    this.$watch('formData.NIK', (value) => {
+                        if (!this.isEdit && value) {
+                            const found = this.karyawan.find(k => k.nik.toString() === value.toString());
+                            if (found) {
+                                this.formData.Nama = found.nama;
+                            }
+                        }
+                    });
                 },
 
                 async loadData() {
@@ -206,10 +219,17 @@
                         const r = await fetch(`${SPREADSHEET_API}?t=${Date.now()}`);
                         const d = await r.json();
                         this.nearmiss = d.nearmiss || [];
+                        this.karyawan = d.karyawan || []; // Pastikan API mengirim data karyawan
                     } catch (e) { console.error("Error load data:", e); }
                     finally { 
                         this.isSyncing = false; 
                         setTimeout(() => lucide.createIcons(), 100); 
+                    }
+                },
+
+                logout() {
+                    if(confirm("Keluar dari aplikasi?")) {
+                        window.location.href = "index.html";
                     }
                 },
 
@@ -222,14 +242,12 @@
 
                 openForm() {
                     this.isEdit = false;
-                    this.formData = { NIK: '', Nama: '', When: '', where: '', detail: '', measure: '', tergetdate: '', note: 'Open' };
+                    this.formData = { NIK: '', Nama: '', When: '', where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close' };
                     this.showForm = true;
-                    setTimeout(() => lucide.createIcons(), 50);
                 },
 
                 editData(item) {
                     this.isEdit = true;
-                    // Map data dari API (lowercase) ke form
                     this.formData = {
                         NIK: item.nik,
                         Nama: item.nama,
@@ -240,12 +258,9 @@
                         tergetdate: item.tergetdate,
                         note: item.note
                     };
-                    // Konversi tanggal untuk input HTML
                     if(this.formData.When) this.formData.When = new Date(this.formData.When).toISOString().slice(0, 16);
                     if(this.formData.tergetdate) this.formData.tergetdate = new Date(this.formData.tergetdate).toISOString().slice(0, 10);
-                    
                     this.showForm = true;
-                    setTimeout(() => lucide.createIcons(), 50);
                 },
 
                 async submitForm() {
@@ -278,12 +293,11 @@
                 get filteredNearmiss() {
                     return this.nearmiss.filter(n => {
                         const s = this.searchQuery.toLowerCase();
-                        // Alpine.js akan baca data dari API yang sudah dipaksa lowercase headernya
                         const matchText = (n.nama || '').toLowerCase().includes(s) || 
                                           (n.nik || '').toString().includes(s) || 
                                           (n.where || '').toLowerCase().includes(s);
                         
-                        const status = n.note || 'Open';
+                        const status = n.note || 'Belum Close';
                         const matchStatus = this.currentFilter === 'all' || status === this.currentFilter;
 
                         const date = new Date(n.when);
