@@ -16,6 +16,8 @@
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
             color: white !important;
         }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background-color: #e2e8f0; border-radius: 10px; }
     </style>
 </head>
 <body x-data="nearmissApp()" x-init="initApp()">
@@ -55,7 +57,7 @@
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-6 space-y-4">
+            <main class="flex-1 overflow-y-auto p-6 space-y-4 custom-scroll">
                 <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 flex flex-wrap items-center gap-4">
                     <div class="relative flex-1 min-w-[200px]">
                         <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-4 h-4"></i>
@@ -92,28 +94,28 @@
                                 <template x-for="(n, idx) in filteredNearmiss" :key="idx">
                                     <tr class="hover:bg-slate-50/50 transition-colors group">
                                         <td class="p-4 pl-8 border-b border-slate-50">
-                                            <div class="text-[11px] font-bold text-slate-700 uppercase" x-text="n.Nama"></div>
-                                            <div class="text-[9px] text-blue-500 font-bold" x-text="n.NIK"></div>
+                                            <div class="text-[11px] font-bold text-slate-700 uppercase" x-text="n.Nama || n.nama"></div>
+                                            <div class="text-[9px] text-blue-500 font-bold" x-text="n.NIK || n.nik"></div>
                                         </td>
-                                        <td class="p-4 text-center border-b border-slate-50 text-[10px] text-slate-400 font-medium" x-text="formatDate(n.When)"></td>
+                                        <td class="p-4 text-center border-b border-slate-50 text-[10px] text-slate-400 font-medium" x-text="formatDate(n.When || n.when)"></td>
                                         <td class="p-4 border-b border-slate-50">
-                                            <div class="text-[10px] font-bold uppercase text-slate-600" x-text="n.where"></div>
-                                            <div class="text-[10px] text-slate-400 italic line-clamp-1" x-text="n.detail"></div>
+                                            <div class="text-[10px] font-bold uppercase text-slate-600" x-text="n.where || n.Where"></div>
+                                            <div class="text-[10px] text-slate-400 italic line-clamp-1" x-text="n.detail || n.Detail"></div>
                                         </td>
                                         <td class="p-4 border-b border-slate-50">
-                                            <p class="text-[10px] text-slate-500 line-clamp-2" x-text="n.measure || '-'"></p>
+                                            <p class="text-[10px] text-slate-500 line-clamp-2" x-text="n.measure || n.Measure || '-'"></p>
                                         </td>
                                         <td class="p-4 text-center border-b border-slate-50">
-                                            <span class="text-[10px] font-bold text-slate-600" x-text="formatDate(n.tergetdate)"></span>
+                                            <span class="text-[10px] font-bold text-slate-600" x-text="formatDate(n.tergetdate || n.TargetDate)"></span>
                                         </td>
                                         <td class="p-4 text-center border-b border-slate-50">
-                                            <span :class="n.note === 'Close' ? 'text-green-500' : 'text-red-500'" 
-                                                  class="text-[9px] font-black uppercase" x-text="n.note === 'Close' ? 'Closed' : 'Pending'"></span>
+                                            <span :class="(n.note === 'Close' || n.Note === 'Close') ? 'text-green-500' : 'text-red-500'" 
+                                                  class="text-[9px] font-black uppercase" x-text="(n.note === 'Close' || n.Note === 'Close') ? 'Closed' : 'Pending'"></span>
                                         </td>
                                         <td class="p-4 pr-8 text-center border-b border-slate-50">
                                             <div class="flex gap-1 justify-center opacity-0 group-hover:opacity-100 transition-all">
                                                 <button @click="editData(n)" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-                                                <button @click="deleteData(n.NIK, n.When)" class="p-2 text-red-500 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                                                <button @click="deleteData(n.NIK || n.nik, n.When || n.when)" class="p-2 text-red-500 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -127,7 +129,7 @@
     </div>
 
     <div x-show="showForm" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden p-8 space-y-6">
+        <div class="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden p-8 space-y-6" @click.away="showForm = false">
             <div class="flex justify-between items-center border-b pb-4">
                 <h3 class="text-sm font-black uppercase italic tracking-tight" x-text="isEdit ? 'Edit Laporan' : 'Laporan Nearmiss Baru'"></h3>
                 <button @click="showForm = false" class="text-slate-400 hover:text-red-500"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -136,41 +138,43 @@
             <form @submit.prevent="submitForm" class="grid grid-cols-2 gap-4">
                 <div class="col-span-1 space-y-1">
                     <label class="text-[9px] font-black uppercase text-slate-400 ml-2">NIK</label>
-                    <input type="text" x-model="formData.NIK" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100 focus:ring-blue-500">
+                    <input type="text" x-model="formData.NIK" @input="watchNIK()" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100 focus:ring-blue-500">
                 </div>
                 <div class="col-span-1 space-y-1">
                     <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Nama</label>
-                    <input type="text" x-model="formData.Nama" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100 focus:ring-blue-500">
+                    <input type="text" x-model="formData.Nama" readonly required class="w-full px-4 py-2.5 bg-slate-100 rounded-xl border-none text-[11px] outline-none text-slate-500 font-bold">
                 </div>
                 <div class="col-span-1 space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Tgl Kejadian (When)</label>
+                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Tgl Kejadian</label>
                     <input type="datetime-local" x-model="formData.When" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100">
                 </div>
                 <div class="col-span-1 space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Lokasi (where)</label>
+                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Lokasi (Where)</label>
                     <input type="text" x-model="formData.where" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100">
                 </div>
                 <div class="col-span-2 space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Detail Temuan (Hiyari Hatto)</label>
-                    <textarea x-model="formData.detail" rows="2" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100 focus:ring-blue-500"></textarea>
+                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Detail Temuan</label>
+                    <textarea x-model="formData.detail" rows="2" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100"></textarea>
                 </div>
                 <div class="col-span-2 space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Countermeasure (Tindakan Perbaikan)</label>
+                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Tindakan Perbaikan</label>
                     <input type="text" x-model="formData.measure" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100">
                 </div>
                 <div class="col-span-1 space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Tgl Perbaikan (Target Date)</label>
+                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Target Selesai</label>
                     <input type="date" x-model="formData.tergetdate" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100">
                 </div>
                 <div class="col-span-1 space-y-1">
                     <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Status</label>
                     <select x-model="formData.note" class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] font-bold outline-none ring-1 ring-slate-100">
-                        <option value="Open">PENDING (OPEN)</option>
-                        <option value="Close">CLOSED (CLOSE)</option>
+                        <option value="Open">PENDING</option>
+                        <option value="Close">CLOSED</option>
                     </select>
                 </div>
                 <div class="col-span-2 pt-4">
-                    <button type="submit" :disabled="isSyncing" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-200" x-text="isSyncing ? 'PROSES...' : 'SIMPAN DATA'"></button>
+                    <button type="submit" :disabled="isSyncing" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-200">
+                        <span x-text="isSyncing ? 'SEDANG MEMPROSES...' : 'SIMPAN LAPORAN'"></span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -183,7 +187,7 @@
             return {
                 sidebarOpen: true, isSyncing: false, showForm: false, isEdit: false,
                 searchQuery: '', currentFilter: 'all',
-                nearmiss: [],
+                nearmiss: [], karyawan: [],
                 formData: { NIK: '', Nama: '', When: '', where: '', detail: '', measure: '', tergetdate: '', note: 'Open' },
 
                 async initApp() {
@@ -197,51 +201,60 @@
                         const r = await fetch(`${SPREADSHEET_API}?t=${Date.now()}`);
                         const d = await r.json();
                         this.nearmiss = d.nearmiss || [];
-                    } catch (e) { alert("Gagal mengambil data"); }
+                        this.karyawan = d.karyawan || [];
+                    } catch (e) { alert("Gagal mengambil data dari Google Sheet"); }
                     finally { this.isSyncing = false; setTimeout(() => lucide.createIcons(), 100); }
+                },
+
+                watchNIK() {
+                    const found = this.karyawan.find(k => (k.NIK || k.nik).toString() === this.formData.NIK.toString());
+                    this.formData.Nama = found ? (found.Nama || found.nama) : '';
                 },
 
                 formatDate(d) {
                     if (!d) return '-';
                     const date = new Date(d);
-                    return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' });
+                    return isNaN(date) ? d : date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' });
                 },
 
                 openForm() {
                     this.isEdit = false;
                     this.formData = { NIK: '', Nama: '', When: '', where: '', detail: '', measure: '', tergetdate: '', note: 'Open' };
                     this.showForm = true;
-                    setTimeout(() => lucide.createIcons(), 50);
                 },
 
                 editData(item) {
                     this.isEdit = true;
-                    this.formData = { ...item };
-                    // Format tanggal untuk input datetime-local (Kejadian)
-                    if(item.When) this.formData.When = new Date(item.When).toISOString().slice(0, 16);
-                    // Format tanggal untuk input date (Perbaikan)
-                    if(item.tergetdate) this.formData.tergetdate = new Date(item.tergetdate).toISOString().split('T')[0];
-                    
+                    this.formData = { 
+                        ...item, 
+                        where: item.where || item.Where,
+                        note: item.note || item.Note,
+                        NIK: item.NIK || item.nik,
+                        Nama: item.Nama || item.nama
+                    };
+                    // Format dates for input
+                    if(item.When || item.when) this.formData.When = new Date(item.When || item.when).toISOString().slice(0, 16);
+                    if(item.tergetdate || item.TargetDate) this.formData.tergetdate = new Date(item.tergetdate || item.TargetDate).toISOString().split('T')[0];
                     this.showForm = true;
-                    setTimeout(() => lucide.createIcons(), 50);
                 },
 
                 async submitForm() {
+                    if(!this.formData.Nama) return alert("NIK tidak valid atau tidak terdaftar!");
                     this.isSyncing = true;
-                    const action = this.isEdit ? 'updateNearmiss' : 'addNearmiss';
                     try {
                         await fetch(SPREADSHEET_API, {
                             method: 'POST',
-                            body: JSON.stringify({ action, data: this.formData })
+                            body: JSON.stringify({ action: this.isEdit ? 'updateNearmiss' : 'addNearmiss', data: this.formData })
                         });
                         this.showForm = false;
                         await this.loadData();
+                        alert("Berhasil!");
                     } catch (e) { alert("Gagal menyimpan data"); }
                     finally { this.isSyncing = false; }
                 },
 
                 async deleteData(nik, when) {
-                    if(!confirm("Hapus laporan ini?")) return;
+                    if(!confirm("Hapus data ini?")) return;
                     this.isSyncing = true;
                     try {
                         await fetch(SPREADSHEET_API, {
@@ -255,9 +268,13 @@
                 get filteredNearmiss() {
                     return this.nearmiss.filter(n => {
                         const s = this.searchQuery.toLowerCase();
-                        const matchText = n.Nama?.toLowerCase().includes(s) || n.NIK?.toString().includes(s) || n.where?.toLowerCase().includes(s);
-                        const status = n.note || 'Open';
-                        const matchStatus = this.currentFilter === 'all' || status === this.currentFilter;
+                        const nik = (n.NIK || n.nik || '').toString();
+                        const nama = (n.Nama || n.nama || '').toLowerCase();
+                        const loc = (n.where || n.Where || '').toLowerCase();
+                        const note = (n.note || n.Note || 'Open');
+                        
+                        const matchText = nik.includes(s) || nama.includes(s) || loc.includes(s);
+                        const matchStatus = this.currentFilter === 'all' || note === this.currentFilter;
                         return matchText && matchStatus;
                     });
                 }
