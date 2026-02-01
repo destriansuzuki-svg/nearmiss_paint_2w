@@ -26,44 +26,35 @@
 
     <div class="flex h-screen overflow-hidden">
         <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-[#0f172a] text-white transition-all duration-300 flex flex-col z-50">
-            <div class="p-6 flex items-center justify-between">
-                <h1 x-show="sidebarOpen" class="font-black text-lg tracking-tighter italic">
-                    <span class="text-blue-500">PAINTING</span><span class="text-white">2W</span>
-                </h1>
-                <button @click="sidebarOpen = !sidebarOpen" class="text-slate-400 hover:text-white">
-                    <i data-lucide="menu" class="w-5 h-5"></i>
-                </button>
+            <div class="p-6 flex items-center justify-between border-b border-slate-800/50">
+                <h1 x-show="sidebarOpen" class="font-black text-blue-400 text-lg uppercase tracking-tighter text-center w-full">Painting 2W</h1>
+                <button @click="sidebarOpen = !sidebarOpen" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400"><i data-lucide="menu"></i></button>
             </div>
-
-            <nav class="flex-1 px-3 space-y-1">
-                <a href="dashboard.html" class="flex items-center w-full px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all font-bold group">
-                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
-                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Dashboard</span>
+            <nav class="flex-1 px-3 mt-6 space-y-2 font-bold">
+                <a href="dashboard.html" class="flex items-center w-full p-3.5 rounded-xl text-slate-400 hover:bg-slate-800 transition-all">
+                    <i data-lucide="layout-grid"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase tracking-widest">Dashboard</span>
                 </a>
-                <a href="#" class="flex items-center w-full px-4 py-3 rounded-xl sidebar-active font-bold">
-                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Nearmiss</span>
+                <a href="datanearmiss.html" class="flex items-center w-full p-3.5 rounded-xl text-slate-400 hover:bg-slate-800 transition-all">
+                    <i data-lucide="alert-triangle"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase tracking-widest">Nearmiss</span>
                 </a>
-                <a href="datakaryawan.html" class="flex items-center w-full px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all font-bold group">
-                    <i data-lucide="users" class="w-5 h-5"></i>
-                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Karyawan</span>
+                <a href="datakaryawan.html" class="flex items-center w-full p-3.5 rounded-xl bg-blue-600 text-white shadow-lg transition-all">
+                    <i data-lucide="users"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase tracking-widest">Karyawan</span>
                 </a>
             </nav>
-
-            <div class="p-6">
-                <button class="flex items-center text-red-400 font-bold hover:text-red-300 transition-colors">
-                    <i data-lucide="log-out" class="w-4 h-4"></i>
-                    <span x-show="sidebarOpen" class="ml-3 text-[10px] uppercase tracking-widest">Keluar</span>
+            <div class="p-4 border-t border-slate-800">
+                <button @click="window.location.href='index.html'" class="flex items-center w-full p-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all font-bold">
+                    <i data-lucide="log-out"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase">Keluar</span>
                 </button>
             </div>
         </aside>
 
-        <div class="flex-1 flex flex-col min-w-0">
-            <header class="bg-white px-8 py-4 flex justify-between items-center border-b border-slate-100">
-                <h2 class="text-xl font-extrabold text-[#1e293b] italic uppercase tracking-tight">LAPORAN NEARMISS</h2>
-                <div class="bg-slate-50 px-4 py-1.5 rounded-full flex items-center gap-2 text-slate-400 font-bold text-[10px] border border-slate-100 shadow-sm">
-                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5" :class="isSyncing ? 'animate-spin' : ''"></i>
-                    <span>SYNCING...</span>
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <header class="bg-white border-b px-8 py-4 flex justify-between items-center z-40">
+                <h2 class="text-xl font-extrabold text-slate-800 uppercase italic">Master Data Karyawan</h2>
+                <div class="flex items-center gap-4">
+                    <button @click="loadData()" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest" 
+                            :disabled="isSyncing"
+                            x-text="isSyncing ? 'SINKRON...' : 'REFRESH DATA'"></button>
                 </div>
             </header>
 
