@@ -3,107 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Karyawan - Painting 2W</title>
+    <title>Karyawan - Painting 2W</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>[x-cloak] { display: none !important; } body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+    <style>
+        [x-cloak] { display: none !important; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; overflow: hidden; }
+        .sidebar-active {
+            background: linear-gradient(90deg, #2563eb, #3b82f6);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            color: white !important;
+        }
+        .btn-primary { background-color: #0f172a; transition: all 0.3s; }
+        .btn-primary:hover { background-color: #2563eb; transform: translateY(-1px); }
+    </style>
 </head>
-<body class="bg-slate-50" x-data="appData()" x-init="initApp()">
+<body x-data="karyawanApp()" x-init="initApp()">
 
     <div class="flex h-screen w-full overflow-hidden">
         <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-[#0f172a] text-white transition-all duration-300 flex flex-col z-50">
-            <div class="p-6 flex items-center justify-between border-b border-slate-800/50">
-                <h1 x-show="sidebarOpen" class="font-black text-blue-400 text-lg uppercase tracking-tighter text-center w-full">Painting 2W</h1>
-                <button @click="sidebarOpen = !sidebarOpen" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400"><i data-lucide="menu"></i></button>
-            </div>
-            <nav class="flex-1 px-3 mt-6 space-y-2 font-bold">
-                <a href="dashboard.html" class="flex items-center w-full p-3.5 rounded-xl text-slate-400 hover:bg-slate-800 transition-all">
-                    <i data-lucide="layout-grid"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase tracking-widest">Dashboard</span>
-                </a>
-                <a href="datanearmiss.html" class="flex items-center w-full p-3.5 rounded-xl text-slate-400 hover:bg-slate-800 transition-all">
-                    <i data-lucide="alert-triangle"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase tracking-widest">Nearmiss</span>
-                </a>
-                <a href="datakaryawan.html" class="flex items-center w-full p-3.5 rounded-xl bg-blue-600 text-white shadow-lg transition-all">
-                    <i data-lucide="users"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase tracking-widest">Karyawan</span>
-                </a>
-            </nav>
-            <div class="p-4 border-t border-slate-800">
-                <button @click="window.location.href='index.html'" class="flex items-center w-full p-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all font-bold">
-                    <i data-lucide="log-out"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase">Keluar</span>
+            <div class="p-6 flex items-center justify-between">
+                <h1 x-show="sidebarOpen" class="font-black text-lg italic tracking-tighter uppercase">
+                    <span class="text-blue-500">Painting</span>2W
+                </h1>
+                <button @click="sidebarOpen = !sidebarOpen" class="text-slate-400 hover:text-white">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
                 </button>
             </div>
+            <nav class="flex-1 px-3 space-y-1">
+                <a href="dashboard.html" class="flex items-center w-full px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all font-bold">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Dashboard</span>
+                </a>
+                <a href="datanearmiss.html" class="flex items-center w-full px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all font-bold">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Nearmiss</span>
+                </a>
+                <a href="#" class="flex items-center w-full px-4 py-3 rounded-xl sidebar-active font-bold">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Karyawan</span>
+                </a>
+            </nav>
         </aside>
 
-        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-            <header class="bg-white border-b px-8 py-4 flex justify-between items-center z-40">
-                <h2 class="text-xl font-extrabold text-slate-800 uppercase italic">Master Data Karyawan</h2>
-                <div class="flex items-center gap-4">
-                    <button @click="loadData()" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest" 
-                            :disabled="isSyncing"
-                            x-text="isSyncing ? 'SINKRON...' : 'REFRESH DATA'"></button>
+        <div class="flex-1 flex flex-col min-w-0">
+            <header class="bg-white px-8 py-4 flex justify-between items-center border-b border-slate-100 shadow-sm">
+                <h2 class="text-xl font-extrabold text-[#1e293b] italic uppercase tracking-tight">Data Karyawan</h2>
+                <div @click="loadData()" class="cursor-pointer bg-slate-50 px-4 py-1.5 rounded-full flex items-center gap-2 text-slate-400 font-bold text-[10px] border border-slate-100 transition-all hover:bg-white">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5" :class="isSyncing ? 'animate-spin text-blue-500' : ''"></i>
+                    <span x-text="isSyncing ? 'SYNCING...' : 'REFRESH'"></span>
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-6 lg:p-10">
-                <div class="space-y-6">
-                    <div class="bg-white p-6 rounded-[2.5rem] border shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div class="relative w-full md:w-96">
-                            <i data-lucide="search" class="absolute left-4 top-3 text-slate-400 w-5 h-5"></i>
-                            <input type="text" x-model="searchK" placeholder="Cari NIK atau Nama Karyawan..." 
-                                   class="w-full pl-12 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-blue-600 font-semibold text-sm transition-all focus:bg-white shadow-inner">
-                        </div>
-                        <button @click="openModal()" class="w-full md:w-auto bg-[#0f172a] text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-blue-600 transition-all shadow-xl shadow-slate-200">
-                            + TAMBAH ANGGOTA
-                        </button>
+            <main class="flex-1 overflow-y-auto p-6 space-y-6">
+                
+                <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 flex flex-wrap items-center gap-4">
+                    <div class="relative flex-1 min-w-[300px]">
+                        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-4 h-4"></i>
+                        <input type="text" x-model="searchQuery" placeholder="Cari NIK atau Nama Karyawan..." 
+                               class="w-full pl-10 pr-4 py-3 bg-slate-50 border-none rounded-2xl outline-none text-[11px] font-medium">
                     </div>
+                    
+                    <button @click="openForm()" class="btn-primary text-white px-6 py-3 rounded-2xl font-black text-[9px] tracking-widest uppercase shadow-md shadow-slate-200">
+                        + Tambah Karyawan
+                    </button>
+                </div>
 
-                    <div class="bg-white rounded-[2.5rem] border overflow-hidden shadow-sm">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                                <thead class="bg-slate-800 text-white font-bold uppercase text-[10px] tracking-widest">
-                                    <tr>
-                                        <th class="p-6">NIK Anggota</th>
-                                        <th class="p-6">Nama Lengkap</th>
-                                        <th class="p-6 text-center">Line / Pos</th>
-                                        <th class="p-6 text-center">Status Lapor</th>
-                                        <th class="p-6 text-center">Aksi</th>
+                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden mb-10">
+                    <div class="overflow-x-auto p-4">
+                        <table class="w-full border-separate border-spacing-0">
+                            <thead>
+                                <tr class="bg-[#1e293b]">
+                                    <th class="p-4 pl-8 rounded-l-full text-[9px] font-black uppercase tracking-widest text-white text-left">NIK Anggota</th>
+                                    <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-left">Nama Lengkap</th>
+                                    <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-left">Line / Pos</th>
+                                    <th class="p-4 pr-8 rounded-r-full text-[9px] font-black uppercase tracking-widest text-white text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                <template x-for="(k, idx) in filteredKaryawan" :key="idx">
+                                    <tr class="hover:bg-slate-50/50 transition-colors group">
+                                        <td class="p-4 pl-8 text-[11px] font-bold text-blue-600" x-text="k.NIK"></td>
+                                        <td class="p-4 text-[11px] font-bold text-slate-700 uppercase" x-text="k.NamaKaryawan"></td>
+                                        <td class="p-4 text-[10px] text-slate-500 font-semibold" x-text="k.Line"></td>
+                                        <td class="p-4 pr-8 text-center">
+                                            <div class="flex gap-2 justify-center opacity-0 group-hover:opacity-100 transition-all">
+                                                <button @click="editData(k)" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
+                                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                                </button>
+                                                <button @click="deleteData(k.NIK)" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody class="divide-y text-[11px] font-bold uppercase">
-                                    <template x-for="k in filteredK" :key="k.nik">
-                                        <tr class="hover:bg-slate-50 transition-colors">
-                                            <td class="p-6 text-blue-600 font-black" x-text="k.nik"></td>
-                                            <td class="p-6 text-slate-800" x-text="k.nama"></td>
-                                            <td class="p-6 text-center text-slate-500" x-text="k.line"></td>
-                                            <td class="p-6 text-center">
-                                                <template x-if="hasReported(k.nik)">
-                                                    <span class="bg-green-100 text-green-600 px-4 py-2 rounded-full inline-flex items-center gap-2">
-                                                        <div class="w-1.5 h-1.5 bg-green-600 rounded-full animate-pulse"></div>
-                                                        <span class="text-[9px] font-black uppercase">Sudah Lapor</span>
-                                                    </span>
-                                                </template>
-                                                <template x-if="!hasReported(k.nik)">
-                                                    <span class="bg-slate-100 text-slate-400 px-4 py-2 rounded-full inline-flex items-center gap-2">
-                                                        <span class="text-[9px] font-black uppercase tracking-tighter">Belum Lapor</span>
-                                                    </span>
-                                                </template>
-                                            </td>
-                                            <td class="p-6 text-center">
-                                                <div class="flex gap-2 justify-center">
-                                                    <button @click="editKaryawan(k)" class="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm">
-                                                        <i data-lucide="pencil" class="w-4 h-4"></i>
-                                                    </button>
-                                                    <button @click="deleteKaryawan(k)" class="p-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm">
-                                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
+                                </template>
+                            </tbody>
+                        </table>
+                        
+                        <div x-show="filteredKaryawan.length === 0" class="py-20 text-center opacity-20">
+                            <i data-lucide="users" class="w-12 h-12 mx-auto mb-2"></i>
+                            <p class="text-[10px] font-black uppercase tracking-widest">Data Karyawan Kosong</p>
                         </div>
                     </div>
                 </div>
@@ -111,140 +113,126 @@
         </div>
     </div>
 
-    <div x-show="modalKaryawan" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        <div class="bg-white rounded-[2.5rem] w-full max-w-lg p-10 shadow-2xl">
-            <h3 class="text-xl font-black text-slate-800 mb-8 uppercase italic tracking-tight" x-text="isEdit ? 'Update Data Anggota' : 'Tambah Anggota Baru'"></h3>
-            <div class="space-y-4">
-                <input type="number" x-model="formK.nik" placeholder="NIK" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-blue-600 transition-all focus:bg-white">
-                <input type="text" x-model="formK.nama" placeholder="NAMA LENGKAP" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-blue-600 transition-all focus:bg-white">
-                <input type="text" x-model="formK.line" placeholder="LINE / POS" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-blue-600 transition-all focus:bg-white">
-                <div class="flex gap-3 pt-4">
-                    <button @click="modalKaryawan = false" class="flex-1 py-4 font-black text-slate-400 text-xs uppercase hover:text-slate-600 transition-all">Batal</button>
-                    <button @click="saveKaryawan()" class="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-xl shadow-blue-200 active:scale-95 transition-all" 
-                            :disabled="isSyncing" x-text="isSyncing ? 'Memproses...' : 'Simpan Data'"></button>
-                </div>
+    <div x-show="showForm" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden p-8">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
+                <h3 class="text-sm font-black uppercase italic tracking-tight text-slate-800" x-text="isEdit ? 'Edit Data Karyawan' : 'Tambah Karyawan Baru'"></h3>
+                <button @click="showForm = false" class="text-slate-400 hover:text-red-500 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
             </div>
+            
+            <form @submit.prevent="submitForm" class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">NIK Karyawan</label>
+                    <input type="text" x-model="formData.NIK" required :disabled="isEdit"
+                           class="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none text-[11px] font-bold outline-none ring-1 ring-slate-100 focus:ring-blue-500 disabled:opacity-50">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Nama Lengkap</label>
+                    <input type="text" x-model="formData.NamaKaryawan" required 
+                           class="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none text-[11px] font-bold outline-none ring-1 ring-slate-100 focus:ring-blue-500 uppercase">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Line / Pos Kerja</label>
+                    <input type="text" x-model="formData.Line" required 
+                           class="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none text-[11px] font-bold outline-none ring-1 ring-slate-100 focus:ring-blue-500 uppercase">
+                </div>
+                
+                <div class="pt-4">
+                    <button type="submit" :disabled="isSyncing" 
+                            class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">
+                        <span x-text="isSyncing ? 'SEDANG MEMPROSES...' : 'SIMPAN DATA KARYAWAN'"></span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
-        // MASUKKAN URL WEB APP GOOGLE SCRIPT ANDA DI SINI
         const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbyiDWiXNU5YSxjaChZlCsXKe8JfzyWKZuGoAvGjDUQSezgeIf4kySfsd0BCEQnNlnJAJw/exec";
 
-        function appData() {
+        function karyawanApp() {
             return {
                 sidebarOpen: true,
                 isSyncing: false,
-                searchK: '',
-                nearmiss: [],
-                karyawan: [],
-                modalKaryawan: false,
+                showForm: false,
                 isEdit: false,
-                oldNik: null,
-                formK: { nik: '', nama: '', line: '' },
+                searchQuery: '',
+                karyawan: [],
+                formData: { NIK: '', NamaKaryawan: '', Line: '' },
 
-                initApp() {
+                async initApp() {
                     lucide.createIcons();
-                    this.loadData();
+                    await this.loadData();
                 },
 
                 async loadData() {
                     this.isSyncing = true;
                     try {
-                        const response = await fetch(SPREADSHEET_API);
-                        const data = await response.json();
-                        
-                        this.karyawan = data.karyawan || [];
-                        this.nearmiss = data.nearmiss || [];
-                        
-                        localStorage.setItem('karyawanData', JSON.stringify(this.karyawan));
-                        localStorage.setItem('nearmissData', JSON.stringify(this.nearmiss));
-                    } catch (error) {
-                        console.error("Gagal load data cloud, gunakan cache:", error);
-                        const cached = localStorage.getItem('karyawanData');
-                        if (cached) this.karyawan = JSON.parse(cached);
+                        const r = await fetch(`${SPREADSHEET_API}?t=${Date.now()}`);
+                        const d = await r.json();
+                        // Asumsikan data karyawan ada di d.karyawan berdasarkan struktur spreadsheet Anda
+                        this.karyawan = d.karyawan || [];
+                    } catch (e) {
+                        console.error("Gagal load data:", e);
                     } finally {
                         this.isSyncing = false;
                         setTimeout(() => lucide.createIcons(), 100);
                     }
                 },
 
-                get filteredK() {
-                    return this.karyawan.filter(k => 
-                        (k.nama && k.nama.toLowerCase().includes(this.searchK.toLowerCase())) || 
-                        (k.nik && k.nik.toString().includes(this.searchK))
-                    );
-                },
-
-                hasReported(nik) {
-                    if (!nik) return false;
-                    return this.nearmiss.some(n => n.nik && n.nik.toString() === nik.toString());
-                },
-
-                openModal() {
+                openForm() {
                     this.isEdit = false;
-                    this.formK = { nik: '', nama: '', line: '' };
-                    this.modalKaryawan = true;
+                    this.formData = { NIK: '', NamaKaryawan: '', Line: '' };
+                    this.showForm = true;
                 },
 
-                editKaryawan(k) {
+                editData(item) {
                     this.isEdit = true;
-                    this.oldNik = k.nik;
-                    this.formK = { ...k };
-                    this.modalKaryawan = true;
+                    this.formData = { ...item };
+                    this.showForm = true;
                 },
 
-                async saveKaryawan() {
-                    if(!this.formK.nik || !this.formK.nama) return alert('NIK dan Nama wajib diisi!');
-                    
+                async submitForm() {
                     this.isSyncing = true;
-                    const params = new URLSearchParams();
-                    params.append('type', 'karyawan'); 
-                    params.append('action', this.isEdit ? 'update' : 'insert');
-                    params.append('nik', this.formK.nik);
-                    params.append('nama', this.formK.nama);
-                    params.append('line', this.formK.line);
-                    if (this.isEdit) params.append('oldNik', this.oldNik);
-
+                    const action = this.isEdit ? 'updateKaryawan' : 'addKaryawan';
                     try {
                         await fetch(SPREADSHEET_API, {
                             method: 'POST',
-                            mode: 'no-cors',
-                            body: params
+                            body: JSON.stringify({ action, data: this.formData })
                         });
-                        
-                        this.modalKaryawan = false;
-                        alert('Data berhasil diproses ke cloud!');
-                        // Delay sedikit agar Google Sheet selesai menulis sebelum refresh
-                        setTimeout(() => this.loadData(), 1500);
-                    } catch (error) {
-                        alert('Error koneksi!');
+                        this.showForm = false;
+                        await this.loadData();
+                    } catch (e) {
+                        alert("Gagal memproses data");
                     } finally {
                         this.isSyncing = false;
                     }
                 },
 
-                async deleteKaryawan(k) {
-                    if (!confirm(`Hapus data ${k.nama}?`)) return;
-                    
+                async deleteData(nik) {
+                    if(!confirm(`Hapus karyawan dengan NIK ${nik}?`)) return;
                     this.isSyncing = true;
-                    const params = new URLSearchParams();
-                    params.append('type', 'karyawan');
-                    params.append('action', 'delete');
-                    params.append('oldNik', k.nik);
-
                     try {
                         await fetch(SPREADSHEET_API, {
                             method: 'POST',
-                            mode: 'no-cors',
-                            body: params
+                            body: JSON.stringify({ action: 'deleteKaryawan', nik: nik })
                         });
-                        alert('Data dihapus!');
-                        setTimeout(() => this.loadData(), 1500);
-                    } catch (error) {
-                        alert('Gagal menghapus!');
+                        await this.loadData();
+                    } catch (e) {
+                        alert("Gagal menghapus data");
+                    } finally {
                         this.isSyncing = false;
                     }
+                },
+
+                get filteredKaryawan() {
+                    return this.karyawan.filter(k => {
+                        const s = this.searchQuery.toLowerCase();
+                        return k.NamaKaryawan?.toLowerCase().includes(s) || 
+                               k.NIK?.toString().includes(s);
+                    });
                 }
             }
         }
