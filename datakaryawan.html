@@ -46,6 +46,13 @@
                     <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Karyawan</span>
                 </a>
             </nav>
+            
+            <div class="p-4 border-t border-slate-800">
+                <button @click="logout()" class="flex items-center w-full px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all font-bold">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Keluar</span>
+                </button>
+            </div>
         </aside>
 
         <div class="flex-1 flex flex-col min-w-0">
@@ -58,15 +65,28 @@
             </header>
 
             <main class="flex-1 overflow-y-auto p-6 space-y-6">
-                
                 <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 flex flex-wrap items-center gap-4">
-                    <div class="relative flex-1 min-w-[300px]">
+                    <div class="relative flex-1 min-w-[200px]">
                         <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-4 h-4"></i>
-                        <input type="text" x-model="searchQuery" placeholder="Cari NIK atau Nama Karyawan..." 
+                        <input type="text" x-model="searchQuery" placeholder="Cari NIK atau Nama..." 
                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border-none rounded-2xl outline-none text-[11px] font-medium">
                     </div>
+
+                    <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+                        <select x-model="filterMonth" class="bg-transparent text-[10px] font-black uppercase px-2 outline-none cursor-pointer">
+                            <template x-for="(m, i) in months" :key="i">
+                                <option :value="i + 1" x-text="m"></option>
+                            </template>
+                        </select>
+                        <div class="w-[1px] h-4 bg-slate-200"></div>
+                        <select x-model="filterYear" class="bg-transparent text-[10px] font-black uppercase px-2 outline-none cursor-pointer">
+                            <template x-for="y in years" :key="y">
+                                <option :value="y" x-text="y"></option>
+                            </template>
+                        </select>
+                    </div>
                     
-                    <button @click="openForm()" class="btn-primary text-white px-6 py-3 rounded-2xl font-black text-[9px] tracking-widest uppercase shadow-md shadow-slate-200">
+                    <button @click="openForm()" class="btn-primary text-white px-6 py-3 rounded-2xl font-black text-[9px] tracking-widest uppercase">
                         + Tambah Karyawan
                     </button>
                 </div>
@@ -79,6 +99,7 @@
                                     <th class="p-4 pl-8 rounded-l-full text-[9px] font-black uppercase tracking-widest text-white text-left">NIK Anggota</th>
                                     <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-left">Nama Lengkap</th>
                                     <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-left">Line / Pos</th>
+                                    <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-center">Status Laporan</th>
                                     <th class="p-4 pr-8 rounded-r-full text-[9px] font-black uppercase tracking-widest text-white text-center">Aksi</th>
                                 </tr>
                             </thead>
@@ -88,25 +109,30 @@
                                         <td class="p-4 pl-8 text-[11px] font-bold text-blue-600" x-text="k.NIK"></td>
                                         <td class="p-4 text-[11px] font-bold text-slate-700 uppercase" x-text="k.NamaKaryawan"></td>
                                         <td class="p-4 text-[10px] text-slate-500 font-semibold" x-text="k.Line"></td>
+                                        <td class="p-4 text-center">
+                                            <div class="flex justify-center">
+                                                <template x-if="checkReportStatus(k.NIK)">
+                                                    <div class="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                                                        <i data-lucide="check" class="w-3.5 h-3.5 stroke-[4]"></i>
+                                                    </div>
+                                                </template>
+                                                <template x-if="!checkReportStatus(k.NIK)">
+                                                    <div class="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+                                                        <i data-lucide="x" class="w-3.5 h-3.5 stroke-[4]"></i>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </td>
                                         <td class="p-4 pr-8 text-center">
                                             <div class="flex gap-2 justify-center opacity-0 group-hover:opacity-100 transition-all">
-                                                <button @click="editData(k)" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
-                                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
-                                                </button>
-                                                <button @click="deleteData(k.NIK)" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                                </button>
+                                                <button @click="editData(k)" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                                <button @click="deleteData(k.NIK)" class="p-2 text-red-500 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                             </div>
                                         </td>
                                     </tr>
                                 </template>
                             </tbody>
                         </table>
-                        
-                        <div x-show="filteredKaryawan.length === 0" class="py-20 text-center opacity-20">
-                            <i data-lucide="users" class="w-12 h-12 mx-auto mb-2"></i>
-                            <p class="text-[10px] font-black uppercase tracking-widest">Data Karyawan Kosong</p>
-                        </div>
                     </div>
                 </div>
             </main>
@@ -114,43 +140,33 @@
     </div>
 
     <div x-show="showForm" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden p-8">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-8">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
-                <h3 class="text-sm font-black uppercase italic tracking-tight text-slate-800" x-text="isEdit ? 'Edit Data Karyawan' : 'Tambah Karyawan Baru'"></h3>
-                <button @click="showForm = false" class="text-slate-400 hover:text-red-500 transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
+                <h3 class="text-sm font-black uppercase italic tracking-tight text-slate-800" x-text="isEdit ? 'Edit Karyawan' : 'Tambah Karyawan'"></h3>
+                <button @click="showForm = false" class="text-slate-400 hover:text-red-500"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            
             <form @submit.prevent="submitForm" class="space-y-4">
                 <div class="space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">NIK Karyawan</label>
-                    <input type="text" x-model="formData.NIK" required :disabled="isEdit"
-                           class="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none text-[11px] font-bold outline-none ring-1 ring-slate-100 focus:ring-blue-500 disabled:opacity-50">
+                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">NIK</label>
+                    <input type="text" x-model="formData.NIK" required :disabled="isEdit" class="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none text-[11px] font-bold outline-none ring-1 ring-slate-100 focus:ring-blue-500">
                 </div>
                 <div class="space-y-1">
                     <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Nama Lengkap</label>
-                    <input type="text" x-model="formData.NamaKaryawan" required 
-                           class="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none text-[11px] font-bold outline-none ring-1 ring-slate-100 focus:ring-blue-500 uppercase">
+                    <input type="text" x-model="formData.NamaKaryawan" required class="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none text-[11px] font-bold outline-none ring-1 ring-slate-100 focus:ring-blue-500 uppercase">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Line / Pos Kerja</label>
-                    <input type="text" x-model="formData.Line" required 
-                           class="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none text-[11px] font-bold outline-none ring-1 ring-slate-100 focus:ring-blue-500 uppercase">
+                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Line / Pos</label>
+                    <input type="text" x-model="formData.Line" required class="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none text-[11px] font-bold outline-none ring-1 ring-slate-100 focus:ring-blue-500 uppercase">
                 </div>
-                
-                <div class="pt-4">
-                    <button type="submit" :disabled="isSyncing" 
-                            class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">
-                        <span x-text="isSyncing ? 'SEDANG MEMPROSES...' : 'SIMPAN DATA KARYAWAN'"></span>
-                    </button>
-                </div>
+                <button type="submit" :disabled="isSyncing" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-700 transition-all">
+                    <span x-text="isSyncing ? 'SEDANG MEMPROSES...' : 'SIMPAN DATA'"></span>
+                </button>
             </form>
         </div>
     </div>
 
     <script>
-        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbwlvT2uodaiijE_nNuKXPbasI0gvtSE9vQTDOtRjFshr3RyvW9eIR8B17NVIVwUK5zfiw/exec";
+        const SPREADSHEET_API = "URL_WEB_APP_ANDA_DISINI";
 
         function karyawanApp() {
             return {
@@ -160,6 +176,11 @@
                 isEdit: false,
                 searchQuery: '',
                 karyawan: [],
+                nearmiss: [],
+                filterMonth: new Date().getMonth() + 1,
+                filterYear: new Date().getFullYear(),
+                months: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+                years: [2024, 2025, 2026],
                 formData: { NIK: '', NamaKaryawan: '', Line: '' },
 
                 async initApp() {
@@ -172,13 +193,28 @@
                     try {
                         const r = await fetch(`${SPREADSHEET_API}?t=${Date.now()}`);
                         const d = await r.json();
-                        // Asumsikan data karyawan ada di d.karyawan berdasarkan struktur spreadsheet Anda
                         this.karyawan = d.karyawan || [];
+                        this.nearmiss = d.nearmiss || [];
                     } catch (e) {
                         console.error("Gagal load data:", e);
                     } finally {
                         this.isSyncing = false;
                         setTimeout(() => lucide.createIcons(), 100);
+                    }
+                },
+
+                checkReportStatus(nik) {
+                    return this.nearmiss.some(n => {
+                        const d = new Date(n.When);
+                        return n.NIK.toString() === nik.toString() && 
+                               (d.getMonth() + 1) == this.filterMonth && 
+                               d.getFullYear() == this.filterYear;
+                    });
+                },
+
+                logout() {
+                    if(confirm("Apakah Anda ingin keluar?")) {
+                        window.location.href = "index.html";
                     }
                 },
 
@@ -212,7 +248,7 @@
                 },
 
                 async deleteData(nik) {
-                    if(!confirm(`Hapus karyawan dengan NIK ${nik}?`)) return;
+                    if(!confirm(`Hapus NIK ${nik}?`)) return;
                     this.isSyncing = true;
                     try {
                         await fetch(SPREADSHEET_API, {
@@ -230,8 +266,7 @@
                 get filteredKaryawan() {
                     return this.karyawan.filter(k => {
                         const s = this.searchQuery.toLowerCase();
-                        return k.NamaKaryawan?.toLowerCase().includes(s) || 
-                               k.NIK?.toString().includes(s);
+                        return k.NamaKaryawan?.toLowerCase().includes(s) || k.NIK?.toString().includes(s);
                     });
                 }
             }
