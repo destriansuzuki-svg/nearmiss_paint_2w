@@ -9,74 +9,134 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>[x-cloak] { display: none !important; } body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+    <style>
+        [x-cloak] { display: none !important; } 
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; overflow: hidden; }
+        .sidebar-active {
+            background: linear-gradient(90deg, #2563eb, #3b82f6);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            color: white !important;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
 </head>
-<body class="bg-slate-50" x-data="appData()" x-init="initApp()">
+<body x-data="appData()" x-init="initApp()">
 
     <div class="flex h-screen w-full overflow-hidden">
         <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-[#0f172a] text-white transition-all duration-300 flex flex-col z-50">
-            <div class="p-6 flex items-center justify-between border-b border-slate-800/50">
-                <h1 x-show="sidebarOpen" class="font-black text-blue-400 text-lg uppercase tracking-tighter">Painting 2W</h1>
-                <button @click="sidebarOpen = !sidebarOpen" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400"><i data-lucide="menu"></i></button>
+            <div class="p-6 flex items-center justify-between">
+                <h1 x-show="sidebarOpen" class="font-black text-lg italic tracking-tighter">
+                    <span class="text-blue-500">PAINTING</span><span class="text-white">2W</span>
+                </h1>
+                <button @click="sidebarOpen = !sidebarOpen" class="text-slate-400 hover:text-white transition-colors">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
             </div>
-            <nav class="flex-1 px-3 mt-6 space-y-2 font-bold">
-                <a href="dashboard.html" class="flex items-center w-full p-3.5 rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-900 transition-all">
-                    <i data-lucide="layout-grid"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase tracking-widest">Dashboard</span>
+
+            <nav class="flex-1 px-3 space-y-1">
+                <a href="dashboard.html" class="flex items-center w-full px-4 py-3 rounded-xl sidebar-active font-bold">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Dashboard</span>
                 </a>
-                <a href="datanearmiss.html" class="flex items-center w-full p-3.5 rounded-xl text-slate-400 hover:bg-slate-800 transition-all">
-                    <i data-lucide="alert-triangle"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase tracking-widest">Nearmiss</span>
+                <a href="datanearmiss.html" class="flex items-center w-full px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all font-bold group">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Nearmiss</span>
                 </a>
-                <a href="datakaryawan.html" class="flex items-center w-full p-3.5 rounded-xl text-slate-400 hover:bg-slate-800 transition-all">
-                    <i data-lucide="users"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase tracking-widest">Karyawan</span>
+                <a href="datakaryawan.html" class="flex items-center w-full px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all font-bold group">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Karyawan</span>
                 </a>
             </nav>
-            <div class="p-4 border-t border-slate-800">
-                <button @click="logout()" class="flex items-center w-full p-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all font-bold">
-                    <i data-lucide="log-out"></i><span x-show="sidebarOpen" class="ml-3 text-xs uppercase tracking-widest">Keluar</span>
+
+            <div class="p-6 border-t border-slate-800/50">
+                <button @click="logout()" class="flex items-center text-red-400 font-bold hover:text-red-300 transition-colors">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[10px] uppercase tracking-widest">Keluar</span>
                 </button>
             </div>
         </aside>
 
-        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-            <header class="bg-white border-b px-8 py-4 flex justify-between items-center z-40">
-                <h2 class="text-xl font-extrabold text-slate-800 uppercase italic">Dashboard Statistik (Live)</h2>
-                <div class="flex items-center gap-4">
-                    <button @click="loadData()" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm" 
-                            :class="isSyncing ? 'animate-pulse' : ''"
-                            x-text="isSyncing ? 'SINKRON...' : 'REFRESH DATA'"></button>
+        <div class="flex-1 flex flex-col min-w-0">
+            <header class="bg-white px-8 py-4 flex justify-between items-center border-b border-slate-100 z-40 shadow-sm">
+                <h2 class="text-xl font-extrabold text-[#1e293b] italic uppercase tracking-tight">Dashboard Statistik (Live)</h2>
+                <div @click="loadData()" class="cursor-pointer bg-slate-50 px-4 py-1.5 rounded-full flex items-center gap-2 text-slate-400 font-bold text-[10px] border border-slate-100 shadow-sm transition-all hover:bg-white">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5" :class="isSyncing ? 'animate-spin text-blue-500' : ''"></i>
+                    <span x-text="isSyncing ? 'SINKRON...' : 'SINKRON...'"></span>
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-6 lg:p-10 space-y-8">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="bg-white p-6 rounded-[2rem] border-2 border-blue-50 text-center shadow-sm">
-                        <p class="text-[10px] font-black text-blue-500 uppercase">Total Nearmiss</p>
-                        <h4 class="text-4xl font-black text-blue-600 mt-2" x-text="nearmiss.length">0</h4>
+            <main class="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6 bg-[#f8fafc]">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-[2rem] border border-slate-100 text-center shadow-sm">
+                        <p class="text-[9px] font-black text-blue-500 uppercase tracking-widest">Total Nearmiss</p>
+                        <h4 class="text-3xl font-black text-blue-600 mt-1" x-text="nearmiss.length">0</h4>
                     </div>
-                    <div class="bg-white p-6 rounded-[2rem] border-2 border-red-50 text-center shadow-sm">
-                        <p class="text-[10px] font-black text-red-500 uppercase">Pending (Open)</p>
-                        <h4 class="text-4xl font-black text-red-600 mt-2" x-text="countPending()">0</h4>
+                    <div class="bg-white p-5 rounded-[2rem] border border-slate-100 text-center shadow-sm">
+                        <p class="text-[9px] font-black text-red-500 uppercase tracking-widest">Pending (Open)</p>
+                        <h4 class="text-3xl font-black text-red-600 mt-1" x-text="countPending()">0</h4>
                     </div>
-                    <div class="bg-white p-6 rounded-[2rem] border-2 border-green-50 text-center shadow-sm">
-                        <p class="text-[10px] font-black text-green-500 uppercase">Closed</p>
-                        <h4 class="text-4xl font-black text-green-600 mt-2" x-text="countClosed()">0</h4>
+                    <div class="bg-white p-5 rounded-[2rem] border border-slate-100 text-center shadow-sm">
+                        <p class="text-[9px] font-black text-green-500 uppercase tracking-widest">Closed</p>
+                        <h4 class="text-3xl font-black text-green-600 mt-1" x-text="countClosed()">0</h4>
                     </div>
-                    <div class="bg-white p-6 rounded-[2rem] border-2 border-slate-50 text-center shadow-sm">
-                        <p class="text-[10px] font-black text-slate-400 uppercase">Karyawan Aktif</p>
-                        <h4 class="text-4xl font-black text-slate-800 mt-2" x-text="karyawan.length">0</h4>
+                    <div class="bg-white p-5 rounded-[2rem] border border-slate-100 text-center shadow-sm">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Karyawan Aktif</p>
+                        <h4 class="text-3xl font-black text-slate-800 mt-1" x-text="karyawan.length">0</h4>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border shadow-sm min-h-[400px]">
-                        <h4 class="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest text-center">Trend Temuan Nearmiss</h4>
-                        <div class="relative h-64"><canvas id="barChart"></canvas></div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                        <h4 class="text-[9px] font-black text-slate-400 uppercase mb-6 tracking-widest text-center">Trend Temuan Nearmiss</h4>
+                        <div class="relative h-48 lg:h-56"><canvas id="barChart"></canvas></div>
                     </div>
-                    <div class="bg-white p-8 rounded-[2.5rem] border shadow-sm min-h-[400px] flex flex-col">
-                        <h4 class="text-[10px] font-black text-slate-400 uppercase mb-4 text-center tracking-widest">Persentase Status</h4>
-                        <div class="flex-1 flex items-center justify-center relative">
+                    <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center">
+                        <h4 class="text-[9px] font-black text-slate-400 uppercase mb-6 tracking-widest text-center">Persentase Status</h4>
+                        <div class="relative w-full h-48 lg:h-56 flex justify-center">
                             <canvas id="pieChart"></canvas>
                         </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden mb-8">
+                    <div class="flex justify-between items-center mb-6 px-2">
+                        <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Aktivitas Terkini (Nearmiss)</h4>
+                        <span class="text-[8px] bg-slate-50 border px-3 py-1 rounded-full font-bold text-slate-400 uppercase tracking-tighter">Live Monitor</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="text-left border-b border-slate-50">
+                                    <th class="pb-3 text-[9px] font-black text-slate-300 uppercase pl-2">Waktu</th>
+                                    <th class="pb-3 text-[9px] font-black text-slate-300 uppercase">Pelapor</th>
+                                    <th class="pb-3 text-[9px] font-black text-slate-300 uppercase">Detail Kejadian</th>
+                                    <th class="pb-3 text-[9px] font-black text-slate-300 uppercase text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                <template x-for="(n, index) in nearmiss.slice(0, 5)" :key="index">
+                                    <tr class="hover:bg-slate-50/50 transition-colors group">
+                                        <td class="py-4 text-[10px] font-medium text-slate-400 pl-2" x-text="formatDate(n.when)"></td>
+                                        <td class="py-4">
+                                            <div class="text-[11px] font-bold text-slate-700 uppercase" x-text="n.nama"></div>
+                                            <div class="text-[9px] text-blue-500 font-bold" x-text="n.nik"></div>
+                                        </td>
+                                        <td class="py-4">
+                                            <div class="text-[11px] text-slate-600 font-semibold truncate max-w-xs uppercase" x-text="n.detail || n.temuan"></div>
+                                            <div class="text-[9px] text-slate-400 italic" x-text="n.where || n.lokasi"></div>
+                                        </td>
+                                        <td class="py-4 text-center">
+                                            <span :class="(n.note === 'Close' || n.status === 'Close') ? 'text-green-500' : 'text-red-500'" 
+                                                  class="text-[9px] font-black uppercase tracking-tighter"
+                                                  x-text="(n.note === 'Close' || n.status === 'Close') ? 'Closed' : 'Pending'">
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </main>
@@ -84,104 +144,119 @@
     </div>
 
     <script>
-        // GANTI INI DENGAN URL WEB APP GOOGLE SCRIPT KAMU
-        // GANTI INI DENGAN URL WEB APP GOOGLE SCRIPT KAMU
-const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbyiDWiXNU5YSxjaChZlCsXKe8JfzyWKZuGoAvGjDUQSezgeIf4kySfsd0BCEQnNlnJAJw/exec";
+        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbyiDWiXNU5YSxjaChZlCsXKe8JfzyWKZuGoAvGjDUQSezgeIf4kySfsd0BCEQnNlnJAJw/exec";
 
-function appData() {
-    return {
-        sidebarOpen: true,
-        isSyncing: false,
-        nearmiss: [],
-        karyawan: [],
-        charts: {},
+        function appData() {
+            return {
+                sidebarOpen: true,
+                isSyncing: false,
+                nearmiss: [],
+                karyawan: [],
+                charts: {},
 
-        async initApp() {
-            lucide.createIcons();
-            await this.loadData();
-        },
-
-        async loadData() {
-            this.isSyncing = true;
-            try {
-                // Tambahkan Timestamp agar data tidak tersangkut di cache browser
-                const response = await fetch(`${SPREADSHEET_API}?t=${new Date().getTime()}`);
-                const data = await response.json();
-                
-                this.nearmiss = data.nearmiss || [];
-                this.karyawan = data.karyawan || [];
-                
-                this.renderCharts();
-            } catch (error) {
-                console.error("Gagal sinkron data:", error);
-            } finally {
-                this.isSyncing = false;
-            }
-        },
-
-        countPending() {
-            // Di Apps Script, status Open/Close ada di properti 'note' atau 'status'
-            // Kita cek n.note (sesuai standar doPost kita sebelumnya)
-            return this.nearmiss.filter(n => n.note?.toLowerCase() !== 'close' && n.note?.toLowerCase() !== 'closed').length;
-        },
-
-        countClosed() {
-            return this.nearmiss.filter(n => n.note?.toLowerCase() === 'close' || n.note?.toLowerCase() === 'closed').length;
-        },
-
-        renderCharts() {
-            if (this.charts.bar) this.charts.bar.destroy();
-            if (this.charts.pie) this.charts.pie.destroy();
-
-            const ctxBar = document.getElementById('barChart').getContext('2d');
-            this.charts.bar = new Chart(ctxBar, {
-                type: 'bar',
-                data: {
-                    labels: ['Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Jan', 'Feb', 'Mar'],
-                    datasets: [{
-                        label: 'Jumlah Temuan',
-                        data: this.mapMonthlyData(),
-                        backgroundColor: '#2563eb',
-                        borderRadius: 10
-                    }]
+                async initApp() {
+                    lucide.createIcons();
+                    await this.loadData();
                 },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
 
-            const ctxPie = document.getElementById('pieChart').getContext('2d');
-            this.charts.pie = new Chart(ctxPie, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Open', 'Close'],
-                    datasets: [{
-                        data: [this.countPending(), this.countClosed()],
-                        backgroundColor: ['#ef4444', '#22c55e']
-                    }]
+                async loadData() {
+                    this.isSyncing = true;
+                    try {
+                        const response = await fetch(`${SPREADSHEET_API}?t=${new Date().getTime()}`);
+                        const data = await response.json();
+                        this.nearmiss = data.nearmiss || [];
+                        this.karyawan = data.karyawan || [];
+                        this.renderCharts();
+                    } catch (error) {
+                        console.error("Gagal sinkron data:", error);
+                    } finally {
+                        this.isSyncing = false;
+                        setTimeout(() => lucide.createIcons(), 100);
+                    }
                 },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        },
 
-        mapMonthlyData() {
-            const monthlyCounts = new Array(12).fill(0);
-            this.nearmiss.forEach(n => {
-                // REVISI: Menggunakan n.when karena itu nama properti dari Apps Script
-                const date = new Date(n.when); 
-                if (!isNaN(date)) {
-                    let monthIdx = date.getMonth() - 3; // Fiskal Apr = 0
-                    if (monthIdx < 0) monthIdx += 12;
-                    monthlyCounts[monthIdx]++;
+                countPending() {
+                    return this.nearmiss.filter(n => (n.note || n.status || '').toLowerCase() !== 'close').length;
+                },
+
+                countClosed() {
+                    return this.nearmiss.filter(n => (n.note || n.status || '').toLowerCase() === 'close').length;
+                },
+
+                formatDate(dateString) {
+                    if (!dateString) return '-';
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }) + ' ' + 
+                           date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                },
+
+                renderCharts() {
+                    if (this.charts.bar) this.charts.bar.destroy();
+                    if (this.charts.pie) this.charts.pie.destroy();
+
+                    const ctxBar = document.getElementById('barChart').getContext('2d');
+                    this.charts.bar = new Chart(ctxBar, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Jan', 'Feb', 'Mar'],
+                            datasets: [{
+                                label: 'Temuan',
+                                data: this.mapMonthlyData(),
+                                backgroundColor: '#2563eb',
+                                borderRadius: 8,
+                                barThickness: 12
+                            }]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: { 
+                                y: { beginAtZero: true, grid: { display: false }, ticks: { font: { size: 9 } } },
+                                x: { grid: { display: false }, ticks: { font: { size: 9 } } }
+                            }
+                        }
+                    });
+
+                    const ctxPie = document.getElementById('pieChart').getContext('2d');
+                    this.charts.pie = new Chart(ctxPie, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Open', 'Close'],
+                            datasets: [{
+                                data: [this.countPending(), this.countClosed()],
+                                backgroundColor: ['#ef4444', '#22c55e'],
+                                borderWidth: 0,
+                                cutout: '75%'
+                            }]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'bottom', labels: { font: { size: 9, weight: 'bold' } } } }
+                        }
+                    });
+                },
+
+                mapMonthlyData() {
+                    const monthlyCounts = new Array(12).fill(0);
+                    this.nearmiss.forEach(n => {
+                        const date = new Date(n.when); 
+                        if (!isNaN(date)) {
+                            let monthIdx = date.getMonth() - 3; 
+                            if (monthIdx < 0) monthIdx += 12;
+                            monthlyCounts[monthIdx]++;
+                        }
+                    });
+                    return monthlyCounts;
+                },
+
+                logout() {
+                    localStorage.clear();
+                    window.location.href = 'index.html';
                 }
-            });
-            return monthlyCounts;
-        },
-
-        logout() {
-            localStorage.clear();
-            window.location.href = 'index.html';
+            }
         }
-    }
-}
     </script>
 </body>
 </html>
