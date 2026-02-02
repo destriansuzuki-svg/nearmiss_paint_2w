@@ -174,147 +174,182 @@
     <script>
         const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbwlvT2uodaiijE_nNuKXPbasI0gvtSE9vQTDOtRjFshr3RyvW9eIR8B17NVIVwUK5zfiw/exec";
 
-        function nearmissApp() {
-            return {
-                sidebarOpen: true, isSyncing: false, showForm: false, isEdit: false,
-                searchQuery: '', currentFilter: 'all',
-                nearmiss: [],
-                karyawan: [],
-                formData: { NIK: '', Nama: '', When: '', originalWhen: '', where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close' },
+function nearmissApp() {
+    return {
+        sidebarOpen: true, 
+        isSyncing: false, 
+        showForm: false, 
+        isEdit: false,
+        searchQuery: '', 
+        currentFilter: 'all',
+        nearmiss: [],
+        karyawan: [],
+        formData: { 
+            NIK: '', Nama: '', When: '', originalWhen: '', 
+            where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close' 
+        },
 
-                async initApp() {
-                    lucide.createIcons();
-                    await this.loadData();
+        async initApp() {
+            lucide.createIcons();
+            await this.loadData();
 
-                    // Perbaikan: Validasi NIK yang lebih fleksibel
-                    this.$watch('formData.NIK', (value) => {
-                        if (value) {
-                            const found = this.karyawan.find(k => k.nik.toString().trim() === value.toString().trim());
-                            this.formData.Nama = found ? found.nama : 'NIK TIDAK DITEMUKAN';
-                        } else {
-                            this.formData.Nama = '';
-                        }
-                    });
-                },
+            // Watcher NIK untuk otomatis isi Nama
+            this.$watch('formData.NIK', (value) => {
+                if (value) {
+                    const found = this.karyawan.find(k => k.nik.toString().trim() === value.toString().trim());
+                    this.formData.Nama = found ? found.nama : 'NIK TIDAK DITEMUKAN';
+                } else {
+                    this.formData.Nama = '';
+                }
+            });
+        },
 
-                async loadData() {
-                    this.isSyncing = true;
-                    try {
-                        const r = await fetch(`${SPREADSHEET_API}?t=${Date.now()}`);
-                        const d = await r.json();
-                        this.nearmiss = (d.nearmiss || []).map(item => ({ ...item, expanded: false }));
-                        this.karyawan = d.karyawan || [];
-                    } catch (e) { console.error("Error load data:", e); }
-                    finally { 
-                        this.isSyncing = false; 
-                        setTimeout(() => lucide.createIcons(), 100); 
-                    }
-                },
+        async loadData() {
+            this.isSyncing = true;
+            try {
+                const r = await fetch(`${SPREADSHEET_API}?t=${Date.now()}`);
+                const d = await r.json();
+                // Normalisasi status saat data masuk agar filter akurat
+                this.nearmiss = (d.nearmiss || []).map(item => ({ 
+                    ...item, 
+                    note: item.note || 'Belum Close', // Default jika kosong
+                    expanded: false 
+                }));
+                this.karyawan = d.karyawan || [];
+            } catch (e) { 
+                console.error("Error load data:", e); 
+            } finally { 
+                this.isSyncing = false; 
+                setTimeout(() => lucide.createIcons(), 100); 
+            }
+        },
 
-                formatDate(d) {
-                    if (!d) return '-';
-                    const date = new Date(d);
-                    if (isNaN(date)) return d;
-                    return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' });
-                },
+        formatDate(d) {
+            if (!d) return '-';
+            const date = new Date(d);
+            if (isNaN(date)) return d;
+            return date.toLocaleDateString('id-ID', { 
+                day: '2-digit', month: 'short', year: 'numeric', 
+                hour: '2-digit', minute: '2-digit' 
+            });
+        },
 
-                openForm() {
-                    this.isEdit = false;
-                    this.formData = { 
-                        NIK: '', Nama: '', 
-                        When: new Date().toISOString().slice(0, 16), 
-                        originalWhen: '', 
-                        where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close' 
-                    };
-                    this.showForm = true;
-                },
+        openForm() {
+            this.isEdit = false;
+            // Set waktu ke WITA/WIB saat ini untuk input HTML
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            
+            this.formData = { 
+                NIK: '', Nama: '', 
+                When: now.toISOString().slice(0, 16), 
+                originalWhen: '', 
+                where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close' 
+            };
+            this.showForm = true;
+        },
 
-                editData(item) {
-                    this.isEdit = true;
-                    // Format waktu untuk input datetime-local
-                    let whenFormatted = '';
-                    if(item.when) {
-                        const d = new Date(item.when);
-                        // Menyesuaikan timezone agar tidak bergeser di input
-                        whenFormatted = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-                    }
-
-                    this.formData = {
-                        NIK: item.nik,
-                        Nama: item.nama,
-                        When: whenFormatted,
-                        originalWhen: item.when, // Sangat Penting: Simpan string waktu asli untuk pencarian di Sheet
-                        where: item.where,
-                        detail: item.detail,
-                        measure: item.measure,
-                        tergetdate: item.tergetdate ? new Date(item.tergetdate).toISOString().slice(0, 10) : '',
-                        note: item.note
-                    };
-                    this.showForm = true;
-                },
-
-                async submitForm() {
-                    // Validasi Nama agar tidak bisa simpan jika NIK salah
-                    if(!this.formData.Nama || this.formData.Nama === 'NIK TIDAK DITEMUKAN') {
-                        return alert("Silakan masukkan NIK yang terdaftar!");
-                    }
-                    
-                    this.isSyncing = true;
-                    const action = this.isEdit ? 'updateNearmiss' : 'addNearmiss';
-                    
-                    try {
-                        const response = await fetch(SPREADSHEET_API, {
-                            method: 'POST',
-                            body: JSON.stringify({ action, data: this.formData })
-                        });
-                        const resJson = await response.json();
-                        
-                        if(resJson.status === 'success') {
-                            this.showForm = false;
-                            await this.loadData();
-                        } else {
-                            alert("Server Error: " + resJson.message);
-                        }
-                    } catch (e) { 
-                        console.error(e);
-                        alert("Terjadi kesalahan koneksi ke server!"); 
-                    } finally { 
-                        this.isSyncing = false; 
-                    }
-                },
-
-                async deleteData(nik, when) {
-                    if(!confirm("Hapus laporan ini secara permanen?")) return;
-                    this.isSyncing = true;
-                    try {
-                        await fetch(SPREADSHEET_API, {
-                            method: 'POST',
-                            body: JSON.stringify({ action: 'deleteNearmiss', nik, when })
-                        });
-                        await this.loadData();
-                    } catch (e) { alert("Gagal Hapus!"); }
-                    finally { this.isSyncing = false; }
-                },
-
-                get filteredNearmiss() {
-                    return this.nearmiss.filter(n => {
-                        const s = this.searchQuery.toLowerCase();
-                        const matchText = (n.nama || '').toLowerCase().includes(s) || 
-                                          (n.nik || '').toString().includes(s) || 
-                                          (n.where || '').toLowerCase().includes(s) ||
-                                          (n.detail || '').toLowerCase().includes(s);
-                        
-                        const status = n.note || 'Belum Close';
-                        const matchStatus = this.currentFilter === 'all' || status === this.currentFilter;
-                        return matchText && matchStatus;
-                    });
-                },
-
-                logout() {
-                    if(confirm("Keluar dari aplikasi?")) window.location.href = "index.html";
+        editData(item) {
+            this.isEdit = true;
+            
+            // Konversi tanggal sheet ke format datetime-local (YYYY-MM-DDTHH:MM)
+            let whenFormatted = '';
+            if(item.when) {
+                const d = new Date(item.when);
+                if(!isNaN(d)) {
+                    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+                    whenFormatted = d.toISOString().slice(0, 16);
                 }
             }
+
+            this.formData = {
+                NIK: item.nik,
+                Nama: item.nama,
+                When: whenFormatted,
+                originalWhen: item.when, // ID unik untuk update di Sheet
+                where: item.where,
+                detail: item.detail,
+                measure: item.measure,
+                tergetdate: item.tergetdate ? new Date(item.tergetdate).toISOString().slice(0, 10) : '',
+                note: item.note || 'Belum Close'
+            };
+            this.showForm = true;
+            setTimeout(() => lucide.createIcons(), 50);
+        },
+
+        async submitForm() {
+            if(!this.formData.Nama || this.formData.Nama === 'NIK TIDAK DITEMUKAN') {
+                return alert("NIK tidak valid!");
+            }
+            
+            this.isSyncing = true;
+            const action = this.isEdit ? 'updateNearmiss' : 'addNearmiss';
+            
+            try {
+                // Pastikan mengirim objek data yang bersih
+                const payload = { 
+                    action, 
+                    data: { ...this.formData } 
+                };
+
+                const response = await fetch(SPREADSHEET_API, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                
+                const resJson = await response.json();
+                
+                if(resJson.status === 'success') {
+                    this.showForm = false;
+                    await this.loadData();
+                } else {
+                    alert("Gagal menyimpan: " + (resJson.message || "Unknown error"));
+                }
+            } catch (e) { 
+                console.error(e);
+                alert("Koneksi terputus!"); 
+            } finally { 
+                this.isSyncing = false; 
+            }
+        },
+
+        async deleteData(nik, when) {
+            if(!confirm("Hapus laporan ini?")) return;
+            this.isSyncing = true;
+            try {
+                const response = await fetch(SPREADSHEET_API, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'deleteNearmiss', nik, when })
+                });
+                const res = await response.json();
+                if(res.status === 'success') await this.loadData();
+            } catch (e) { alert("Gagal hapus data!"); }
+            finally { this.isSyncing = false; }
+        },
+
+        // Perbaikan logika Filter
+        get filteredNearmiss() {
+            return this.nearmiss.filter(n => {
+                // 1. Filter Pencarian Teks
+                const s = this.searchQuery.toLowerCase();
+                const matchText = (n.nama || '').toLowerCase().includes(s) || 
+                                  (n.nik || '').toString().includes(s) || 
+                                  (n.where || '').toLowerCase().includes(s);
+                
+                // 2. Filter Status (Pending vs Closed)
+                // Pastikan membandingkan value yang sama dengan tombol filter
+                const currentStatus = n.note === 'Close' ? 'Close' : 'Belum Close';
+                const matchStatus = this.currentFilter === 'all' || currentStatus === this.currentFilter;
+                
+                return matchText && matchStatus;
+            });
+        },
+
+        logout() {
+            if(confirm("Keluar dari aplikasi?")) window.location.href = "index.html";
         }
+    }
+}
     </script>
 </body>
 </html>
