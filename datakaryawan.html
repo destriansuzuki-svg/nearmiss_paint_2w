@@ -189,19 +189,41 @@
                 },
 
                 async loadData() {
-                    this.isSyncing = true;
-                    try {
-                        const r = await fetch(`${SPREADSHEET_API}?t=${Date.now()}`);
-                        const d = await r.json();
-                        this.karyawan = d.karyawan || [];
-                        this.nearmiss = d.nearmiss || [];
-                    } catch (e) {
-                        console.error("Gagal load data:", e);
-                    } finally {
-                        this.isSyncing = false;
-                        setTimeout(() => lucide.createIcons(), 100);
-                    }
-                },
+    this.isSyncing = true;
+    try {
+        const r = await fetch(`${SPREADSHEET_API}?t=${Date.now()}`);
+        const d = await r.json();
+        
+        // Sesuaikan mapping agar property konsisten dengan yang diharapkan HTML (NIK, NamaKaryawan, dll)
+        this.karyawan = (d.karyawan || []).map(k => ({
+            NIK: k.nik,
+            NamaKaryawan: k.nama,
+            Line: k.line || '-' // Pastikan di Apps Script juga mengambil kolom Line
+        }));
+        
+        // Simpan data nearmiss (properti dari script adalah: nik, when, dll)
+        this.nearmiss = d.nearmiss || [];
+    } catch (e) {
+        console.error("Gagal load data:", e);
+    } finally {
+        this.isSyncing = false;
+        setTimeout(() => lucide.createIcons(), 100);
+    }
+},
+
+checkReportStatus(nik) {
+    if (!nik || !this.nearmiss.length) return false;
+    
+    return this.nearmiss.some(n => {
+        if (!n.when) return false;
+        
+        const d = new Date(n.when);
+        // Pastikan n.nik (huruf kecil sesuai Apps Script) dibandingkan dengan nik dari tabel
+        return n.nik.toString() === nik.toString() && 
+               (d.getMonth() + 1) == this.filterMonth && 
+               d.getFullYear() == this.filterYear;
+    });
+},
 
                 checkReportStatus(nik) {
                     return this.nearmiss.some(n => {
