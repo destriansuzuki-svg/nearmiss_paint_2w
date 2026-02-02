@@ -189,20 +189,30 @@ function nearmissApp() {
             where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close' 
         },
 
-        async initApp() {
-            lucide.createIcons();
-            await this.loadData();
+       async initApp() {
+    lucide.createIcons();
+    await this.loadData();
 
-            // Watcher NIK untuk otomatis isi Nama
-            this.$watch('formData.NIK', (value) => {
-                if (value) {
-                    const found = this.karyawan.find(k => k.nik.toString().trim() === value.toString().trim());
-                    this.formData.Nama = found ? found.nama : 'NIK TIDAK DITEMUKAN';
-                } else {
-                    this.formData.Nama = '';
-                }
-            });
-        },
+    // Watcher NIK untuk otomatis isi Nama
+    this.$watch('formData.NIK', (value) => {
+        if (!value) {
+            this.formData.Nama = '';
+            return;
+        }
+        
+        // Pastikan pencarian lebih kuat dengan membersihkan spasi
+        const cleanInput = value.toString().trim();
+        const found = this.karyawan.find(k => 
+            k.nik && k.nik.toString().trim() === cleanInput
+        );
+
+        if (found) {
+            this.formData.Nama = found.nama;
+        } else {
+            this.formData.Nama = 'NIK TIDAK DITEMUKAN';
+        }
+    });
+},
 
         async loadData() {
             this.isSyncing = true;
@@ -250,32 +260,38 @@ function nearmissApp() {
         },
 
         editData(item) {
-            this.isEdit = true;
-            
-            // Konversi tanggal sheet ke format datetime-local (YYYY-MM-DDTHH:MM)
-            let whenFormatted = '';
-            if(item.when) {
-                const d = new Date(item.when);
-                if(!isNaN(d)) {
-                    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-                    whenFormatted = d.toISOString().slice(0, 16);
-                }
-            }
+    this.isEdit = true;
+    
+    // Simpan data asli untuk identifikasi baris saat update
+    const originalDate = item.when; 
 
-            this.formData = {
-                NIK: item.nik,
-                Nama: item.nama,
-                When: whenFormatted,
-                originalWhen: item.when, // ID unik untuk update di Sheet
-                where: item.where,
-                detail: item.detail,
-                measure: item.measure,
-                tergetdate: item.tergetdate ? new Date(item.tergetdate).toISOString().slice(0, 10) : '',
-                note: item.note || 'Belum Close'
-            };
-            this.showForm = true;
-            setTimeout(() => lucide.createIcons(), 50);
-        },
+    // Konversi tanggal untuk input HTML datetime-local
+    let whenFormatted = '';
+    if (item.when) {
+        const d = new Date(item.when);
+        if (!isNaN(d)) {
+            // Penyesuaian timezone agar waktu tidak bergeser di input form
+            const offset = d.getTimezoneOffset() * 60000;
+            const localISOTime = new Date(d - offset).toISOString().slice(0, 16);
+            whenFormatted = localISOTime;
+        }
+    }
+
+    this.formData = {
+        NIK: item.nik,
+        Nama: item.nama,
+        When: whenFormatted,
+        originalWhen: originalDate, // ID PENTING: Jangan diubah agar backend bisa menemukan barisnya
+        where: item.where,
+        detail: item.detail,
+        measure: item.measure,
+        tergetdate: item.tergetdate ? new Date(item.tergetdate).toISOString().slice(0, 10) : '',
+        note: item.note || 'Belum Close'
+    };
+
+    this.showForm = true;
+    setTimeout(() => lucide.createIcons(), 50);
+},
 
         async submitForm() {
             if(!this.formData.Nama || this.formData.Nama === 'NIK TIDAK DITEMUKAN') {
