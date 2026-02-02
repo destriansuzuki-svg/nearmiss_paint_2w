@@ -11,12 +11,7 @@
     <style>
         [x-cloak] { display: none !important; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; overflow: hidden; }
-        .sidebar-active {
-            background: linear-gradient(90deg, #2563eb, #3b82f6);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-            color: white !important;
-        }
-        /* Custom scrollbar for table detail */
+        .sidebar-active { background: linear-gradient(90deg, #2563eb, #3b82f6); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); color: white !important; }
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     </style>
@@ -25,39 +20,35 @@
 
     <div class="flex h-screen w-full overflow-hidden">
         <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-[#0f172a] text-white transition-all duration-300 flex flex-col z-50">
-    <div class="p-6 flex items-center justify-between">
-        <h1 x-show="sidebarOpen" class="font-black text-lg italic tracking-tighter uppercase">
-            <span class="text-blue-500">Painting</span><span class="text-white">2W</span>
-        </h1>
-        <button @click="sidebarOpen = !sidebarOpen" class="text-slate-400 hover:text-white">
-            <i data-lucide="menu" class="w-5 h-5"></i>
-        </button>
-    </div>
-
-    <nav class="flex-1 px-3 space-y-1">
-        <a href="dashboard.html" class="flex items-center w-full px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all font-bold">
-            <i data-lucide="layout-grid" class="w-5 h-5"></i>
-            <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Dashboard</span>
-        </a>
-
-        <a href="#" class="flex items-center w-full px-4 py-3 rounded-xl sidebar-active font-bold">
-            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-            <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Nearmiss</span>
-        </a>
-
-        <a href="datakaryawan.html" class="flex items-center w-full px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all font-bold">
-            <i data-lucide="users" class="w-5 h-5"></i>
-            <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Karyawan</span>
-        </a>
-    </nav>
-
-    <div class="p-3 border-t border-slate-800">
-        <button @click="logout()" class="flex items-center w-full px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all font-bold">
-            <i data-lucide="log-out" class="w-5 h-5"></i>
-            <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Keluar</span>
-        </button>
-    </div>
-</aside>
+            <div class="p-6 flex items-center justify-between">
+                <h1 x-show="sidebarOpen" class="font-black text-lg italic tracking-tighter uppercase">
+                    <span class="text-blue-500">Painting</span><span class="text-white">2W</span>
+                </h1>
+                <button @click="sidebarOpen = !sidebarOpen" class="text-slate-400 hover:text-white">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <nav class="flex-1 px-3 space-y-1">
+                <a href="dashboard.html" class="flex items-center w-full px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all font-bold">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Dashboard</span>
+                </a>
+                <a href="#" class="flex items-center w-full px-4 py-3 rounded-xl sidebar-active font-bold">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Nearmiss</span>
+                </a>
+                <a href="datakaryawan.html" class="flex items-center w-full px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all font-bold">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Karyawan</span>
+                </a>
+            </nav>
+            <div class="p-3 border-t border-slate-800">
+                <button @click="logout()" class="flex items-center w-full px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all font-bold">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Keluar</span>
+                </button>
+            </div>
+        </aside>
 
         <div class="flex-1 flex flex-col min-w-0">
             <header class="bg-white px-8 py-4 flex justify-between items-center border-b border-slate-100 shadow-sm">
@@ -74,16 +65,12 @@
                         <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-4 h-4"></i>
                         <input type="text" x-model="searchQuery" placeholder="Cari NIK, Nama, Lokasi..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none text-[11px] font-medium">
                     </div>
-                    
                     <div class="flex bg-slate-100 p-1 rounded-xl">
                         <button @click="currentFilter = 'all'" :class="currentFilter === 'all' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">Semua</button>
                         <button @click="currentFilter = 'Belum Close'" :class="currentFilter === 'Belum Close' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">Pending</button>
                         <button @click="currentFilter = 'Close'" :class="currentFilter === 'Close' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">Closed</button>
                     </div>
-
-                    <button @click="openForm()" class="bg-[#111827] text-white px-5 py-2.5 rounded-xl font-black text-[9px] tracking-widest uppercase hover:bg-blue-600 transition-all">
-                        + Tambah Laporan
-                    </button>
+                    <button @click="openForm()" class="bg-[#111827] text-white px-5 py-2.5 rounded-xl font-black text-[9px] tracking-widest uppercase hover:bg-blue-600 transition-all">+ Tambah Laporan</button>
                 </div>
 
                 <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden min-h-[500px]">
@@ -116,8 +103,7 @@
                                             <div class="text-[9px] font-bold text-slate-400 mt-1" x-show="n.tergetdate">Target: <span x-text="formatDate(n.tergetdate)"></span></div>
                                         </td>
                                         <td class="p-4 text-center border-b border-slate-50 align-top">
-                                            <span :class="n.note === 'Close' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'" 
-                                                  class="text-[8px] px-2 py-1 rounded-full font-black uppercase" x-text="n.note === 'Close' ? 'Closed' : 'Pending'"></span>
+                                            <span :class="n.note === 'Close' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'" class="text-[8px] px-2 py-1 rounded-full font-black uppercase" x-text="n.note === 'Close' ? 'Closed' : 'Pending'"></span>
                                         </td>
                                         <td class="p-4 pr-8 text-center border-b border-slate-50 align-top">
                                             <div class="flex gap-1 justify-center opacity-0 group-hover:opacity-100 transition-all">
@@ -145,10 +131,10 @@
             <form @submit.prevent="submitForm" class="grid grid-cols-2 gap-4">
                 <div class="col-span-1 space-y-1">
                     <label class="text-[9px] font-black uppercase text-slate-400 ml-2">NIK</label>
-                    <input type="text" x-model="formData.NIK" required placeholder="NIK..." class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100 focus:ring-blue-500">
+                    <input type="text" x-model="formData.NIK" required placeholder="Ketik NIK..." class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100 focus:ring-blue-500">
                 </div>
                 <div class="col-span-1 space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Nama</label>
+                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Nama Pelapor</label>
                     <input type="text" x-model="formData.Nama" readonly class="w-full px-4 py-2.5 bg-slate-100 text-slate-500 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100">
                 </div>
                 <div class="col-span-1 space-y-1">
@@ -200,10 +186,13 @@
                     lucide.createIcons();
                     await this.loadData();
 
+                    // Perbaikan: Validasi NIK yang lebih fleksibel
                     this.$watch('formData.NIK', (value) => {
                         if (value) {
-                            const found = this.karyawan.find(k => k.nik.toString() === value.toString());
+                            const found = this.karyawan.find(k => k.nik.toString().trim() === value.toString().trim());
                             this.formData.Nama = found ? found.nama : 'NIK TIDAK DITEMUKAN';
+                        } else {
+                            this.formData.Nama = '';
                         }
                     });
                 },
@@ -213,7 +202,6 @@
                     try {
                         const r = await fetch(`${SPREADSHEET_API}?t=${Date.now()}`);
                         const d = await r.json();
-                        // Tambahkan properti 'expanded' untuk setiap item nearmiss
                         this.nearmiss = (d.nearmiss || []).map(item => ({ ...item, expanded: false }));
                         this.karyawan = d.karyawan || [];
                     } catch (e) { console.error("Error load data:", e); }
@@ -235,7 +223,7 @@
                     this.formData = { 
                         NIK: '', Nama: '', 
                         When: new Date().toISOString().slice(0, 16), 
-                        originalWhen: '', // Kosongkan saat data baru
+                        originalWhen: '', 
                         where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close' 
                     };
                     this.showForm = true;
@@ -243,10 +231,11 @@
 
                 editData(item) {
                     this.isEdit = true;
-                    // Format tanggal untuk input HTML
+                    // Format waktu untuk input datetime-local
                     let whenFormatted = '';
                     if(item.when) {
                         const d = new Date(item.when);
+                        // Menyesuaikan timezone agar tidak bergeser di input
                         whenFormatted = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
                     }
 
@@ -254,7 +243,7 @@
                         NIK: item.nik,
                         Nama: item.nama,
                         When: whenFormatted,
-                        originalWhen: item.when, // Simpan waktu asli sebagai ID pencarian di sheet
+                        originalWhen: item.when, // Sangat Penting: Simpan string waktu asli untuk pencarian di Sheet
                         where: item.where,
                         detail: item.detail,
                         measure: item.measure,
@@ -265,9 +254,12 @@
                 },
 
                 async submitForm() {
-                    if(!this.formData.Nama || this.formData.Nama === 'NIK TIDAK DITEMUKAN') return alert("NIK tidak valid!");
-                    this.isSyncing = true;
+                    // Validasi Nama agar tidak bisa simpan jika NIK salah
+                    if(!this.formData.Nama || this.formData.Nama === 'NIK TIDAK DITEMUKAN') {
+                        return alert("Silakan masukkan NIK yang terdaftar!");
+                    }
                     
+                    this.isSyncing = true;
                     const action = this.isEdit ? 'updateNearmiss' : 'addNearmiss';
                     
                     try {
@@ -281,10 +273,11 @@
                             this.showForm = false;
                             await this.loadData();
                         } else {
-                            alert("Gagal: " + resJson.message);
+                            alert("Server Error: " + resJson.message);
                         }
                     } catch (e) { 
-                        alert("Terjadi kesalahan koneksi!"); 
+                        console.error(e);
+                        alert("Terjadi kesalahan koneksi ke server!"); 
                     } finally { 
                         this.isSyncing = false; 
                     }
@@ -313,7 +306,6 @@
                         
                         const status = n.note || 'Belum Close';
                         const matchStatus = this.currentFilter === 'all' || status === this.currentFilter;
-
                         return matchText && matchStatus;
                     });
                 },
