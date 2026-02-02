@@ -16,6 +16,9 @@
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
             color: white !important;
         }
+        /* Custom scrollbar for table detail */
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     </style>
 </head>
 <body x-data="nearmissApp()" x-init="initApp()">
@@ -39,12 +42,7 @@
                     <i data-lucide="alert-triangle" class="w-5 h-5"></i>
                     <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Nearmiss</span>
                 </a>
-                <a href="datakaryawan.html" class="flex items-center w-full px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all font-bold">
-                    <i data-lucide="users" class="w-5 h-5"></i>
-                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Karyawan</span>
-                </a>
             </nav>
-
             <div class="p-3 border-t border-slate-800">
                 <button @click="logout()" class="flex items-center w-full px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all font-bold">
                     <i data-lucide="log-out" class="w-5 h-5"></i>
@@ -62,20 +60,13 @@
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-6 space-y-4">
+            <main class="flex-1 overflow-y-auto p-6 space-y-4 custom-scroll">
                 <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 flex flex-wrap items-center gap-4">
                     <div class="relative flex-1 min-w-[200px]">
                         <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-4 h-4"></i>
                         <input type="text" x-model="searchQuery" placeholder="Cari NIK, Nama, Lokasi..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none text-[11px] font-medium">
                     </div>
                     
-                    <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
-                        <span class="text-[9px] font-bold text-slate-400 uppercase">Periode:</span>
-                        <input type="date" x-model="filterDateStart" class="bg-transparent border-none text-[10px] font-bold text-slate-600 outline-none">
-                        <span class="text-slate-300">-</span>
-                        <input type="date" x-model="filterDateEnd" class="bg-transparent border-none text-[10px] font-bold text-slate-600 outline-none">
-                    </div>
-
                     <div class="flex bg-slate-100 p-1 rounded-xl">
                         <button @click="currentFilter = 'all'" :class="currentFilter === 'all' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">Semua</button>
                         <button @click="currentFilter = 'Belum Close'" :class="currentFilter === 'Belum Close' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">Pending</button>
@@ -89,39 +80,38 @@
 
                 <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden min-h-[500px]">
                     <div class="overflow-x-auto p-4">
-                        <table class="w-full border-separate border-spacing-0">
+                        <table class="w-full border-separate border-spacing-y-2">
                             <thead>
                                 <tr class="bg-[#1e293b]">
-                                    <th class="p-4 pl-8 rounded-l-full text-[9px] font-black uppercase tracking-widest text-white text-left">NIK / Nama</th>
-                                    <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-center">When</th>
-                                    <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-left">Lokasi/Detail</th>
+                                    <th class="p-4 pl-8 rounded-l-full text-[9px] font-black uppercase tracking-widest text-white text-left">Pelapor</th>
+                                    <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-left">Detail Temuan</th>
                                     <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-left">Countermeasure</th>
-                                    <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-center">Target</th>
                                     <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-center">Status</th>
                                     <th class="p-4 pr-8 rounded-r-full text-[9px] font-black uppercase tracking-widest text-white text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="text-[11px]">
                                 <template x-for="(n, idx) in filteredNearmiss" :key="idx">
-                                    <tr class="hover:bg-slate-50/50 transition-colors group">
-                                        <td class="p-4 pl-8 border-b border-slate-50">
+                                    <tr class="hover:bg-slate-50 transition-colors group">
+                                        <td class="p-4 pl-8 border-b border-slate-50 align-top">
                                             <div class="font-bold text-slate-700 uppercase" x-text="n.nama"></div>
                                             <div class="text-[9px] text-blue-500 font-bold" x-text="n.nik"></div>
+                                            <div class="text-[9px] text-slate-400 mt-1" x-text="formatDate(n.when)"></div>
                                         </td>
-                                        <td class="p-4 text-center border-b border-slate-50 text-[10px] text-slate-400 font-medium" x-text="formatDate(n.when)"></td>
-                                        <td class="p-4 border-b border-slate-50">
-                                            <div class="font-bold uppercase text-slate-600" x-text="n.where"></div>
-                                            <div class="text-slate-400 italic line-clamp-1" x-text="n.detail"></div>
+                                        <td class="p-4 border-b border-slate-50 align-top max-w-[200px]">
+                                            <div class="font-bold uppercase text-slate-600 mb-1" x-text="n.where"></div>
+                                            <div :class="n.expanded ? '' : 'line-clamp-2'" class="text-slate-500 transition-all duration-300" x-text="n.detail"></div>
+                                            <button x-show="n.detail.length > 60" @click="n.expanded = !n.expanded" class="text-blue-500 font-bold text-[9px] mt-1 hover:underline uppercase" x-text="n.expanded ? 'Show Less' : 'Read More'"></button>
                                         </td>
-                                        <td class="p-4 border-b border-slate-50">
-                                            <p class="text-slate-500 line-clamp-2" x-text="n.measure || '-'"></p>
+                                        <td class="p-4 border-b border-slate-50 align-top max-w-[200px]">
+                                            <div :class="n.expanded ? '' : 'line-clamp-2'" class="text-slate-500" x-text="n.measure || '-'"></div>
+                                            <div class="text-[9px] font-bold text-slate-400 mt-1" x-show="n.tergetdate">Target: <span x-text="formatDate(n.tergetdate)"></span></div>
                                         </td>
-                                        <td class="p-4 text-center border-b border-slate-50 text-slate-400 font-bold" x-text="formatDate(n.tergetdate)"></td>
-                                        <td class="p-4 text-center border-b border-slate-50">
-                                            <span :class="n.note === 'Close' ? 'text-green-500' : 'text-red-500'" 
-                                                  class="text-[9px] font-black uppercase" x-text="n.note === 'Close' ? 'Closed' : 'Pending'"></span>
+                                        <td class="p-4 text-center border-b border-slate-50 align-top">
+                                            <span :class="n.note === 'Close' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'" 
+                                                  class="text-[8px] px-2 py-1 rounded-full font-black uppercase" x-text="n.note === 'Close' ? 'Closed' : 'Pending'"></span>
                                         </td>
-                                        <td class="p-4 pr-8 text-center border-b border-slate-50">
+                                        <td class="p-4 pr-8 text-center border-b border-slate-50 align-top">
                                             <div class="flex gap-1 justify-center opacity-0 group-hover:opacity-100 transition-all">
                                                 <button @click="editData(n)" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
                                                 <button @click="deleteData(n.nik, n.when)" class="p-2 text-red-500 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
@@ -147,14 +137,14 @@
             <form @submit.prevent="submitForm" class="grid grid-cols-2 gap-4">
                 <div class="col-span-1 space-y-1">
                     <label class="text-[9px] font-black uppercase text-slate-400 ml-2">NIK</label>
-                    <input type="text" x-model="formData.NIK" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100 focus:ring-blue-500">
+                    <input type="text" x-model="formData.NIK" required placeholder="NIK..." class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100 focus:ring-blue-500">
                 </div>
                 <div class="col-span-1 space-y-1">
                     <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Nama</label>
-                    <input type="text" x-model="formData.Nama" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100">
+                    <input type="text" x-model="formData.Nama" readonly class="w-full px-4 py-2.5 bg-slate-100 text-slate-500 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100">
                 </div>
                 <div class="col-span-1 space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Waktu (When)</label>
+                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Waktu Kejadian</label>
                     <input type="datetime-local" x-model="formData.When" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100">
                 </div>
                 <div class="col-span-1 space-y-1">
@@ -167,7 +157,7 @@
                 </div>
                 <div class="col-span-2 space-y-1">
                     <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Detail Temuan</label>
-                    <textarea x-model="formData.detail" rows="2" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100 focus:ring-blue-500"></textarea>
+                    <textarea x-model="formData.detail" rows="3" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100 focus:ring-blue-500"></textarea>
                 </div>
                 <div class="col-span-2 space-y-1">
                     <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Countermeasure</label>
@@ -193,22 +183,19 @@
         function nearmissApp() {
             return {
                 sidebarOpen: true, isSyncing: false, showForm: false, isEdit: false,
-                searchQuery: '', currentFilter: 'all', filterDateStart: '', filterDateEnd: '',
+                searchQuery: '', currentFilter: 'all',
                 nearmiss: [],
-                karyawan: [], // Simpan data master karyawan
-                formData: { NIK: '', Nama: '', When: '', where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close' },
+                karyawan: [],
+                formData: { NIK: '', Nama: '', When: '', originalWhen: '', where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close' },
 
                 async initApp() {
                     lucide.createIcons();
                     await this.loadData();
 
-                    // REVISI: Watcher untuk Auto-fill Nama berdasarkan NIK
                     this.$watch('formData.NIK', (value) => {
-                        if (!this.isEdit && value) {
+                        if (value) {
                             const found = this.karyawan.find(k => k.nik.toString() === value.toString());
-                            if (found) {
-                                this.formData.Nama = found.nama;
-                            }
+                            this.formData.Nama = found ? found.nama : 'NIK TIDAK DITEMUKAN';
                         }
                     });
                 },
@@ -218,8 +205,9 @@
                     try {
                         const r = await fetch(`${SPREADSHEET_API}?t=${Date.now()}`);
                         const d = await r.json();
-                        this.nearmiss = d.nearmiss || [];
-                        this.karyawan = d.karyawan || []; // Pastikan API mengirim data karyawan
+                        // Tambahkan properti 'expanded' untuk setiap item nearmiss
+                        this.nearmiss = (d.nearmiss || []).map(item => ({ ...item, expanded: false }));
+                        this.karyawan = d.karyawan || [];
                     } catch (e) { console.error("Error load data:", e); }
                     finally { 
                         this.isSyncing = false; 
@@ -227,58 +215,75 @@
                     }
                 },
 
-                logout() {
-                    if(confirm("Keluar dari aplikasi?")) {
-                        window.location.href = "index.html";
-                    }
-                },
-
                 formatDate(d) {
                     if (!d) return '-';
                     const date = new Date(d);
                     if (isNaN(date)) return d;
-                    return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' });
+                    return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' });
                 },
 
                 openForm() {
                     this.isEdit = false;
-                    this.formData = { NIK: '', Nama: '', When: '', where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close' };
+                    this.formData = { 
+                        NIK: '', Nama: '', 
+                        When: new Date().toISOString().slice(0, 16), 
+                        originalWhen: '', // Kosongkan saat data baru
+                        where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close' 
+                    };
                     this.showForm = true;
                 },
 
                 editData(item) {
                     this.isEdit = true;
+                    // Format tanggal untuk input HTML
+                    let whenFormatted = '';
+                    if(item.when) {
+                        const d = new Date(item.when);
+                        whenFormatted = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                    }
+
                     this.formData = {
                         NIK: item.nik,
                         Nama: item.nama,
-                        When: item.when,
+                        When: whenFormatted,
+                        originalWhen: item.when, // Simpan waktu asli sebagai ID pencarian di sheet
                         where: item.where,
                         detail: item.detail,
                         measure: item.measure,
-                        tergetdate: item.tergetdate,
+                        tergetdate: item.tergetdate ? new Date(item.tergetdate).toISOString().slice(0, 10) : '',
                         note: item.note
                     };
-                    if(this.formData.When) this.formData.When = new Date(this.formData.When).toISOString().slice(0, 16);
-                    if(this.formData.tergetdate) this.formData.tergetdate = new Date(this.formData.tergetdate).toISOString().slice(0, 10);
                     this.showForm = true;
                 },
 
                 async submitForm() {
+                    if(!this.formData.Nama || this.formData.Nama === 'NIK TIDAK DITEMUKAN') return alert("NIK tidak valid!");
                     this.isSyncing = true;
+                    
                     const action = this.isEdit ? 'updateNearmiss' : 'addNearmiss';
+                    
                     try {
-                        await fetch(SPREADSHEET_API, {
+                        const response = await fetch(SPREADSHEET_API, {
                             method: 'POST',
                             body: JSON.stringify({ action, data: this.formData })
                         });
-                        this.showForm = false;
-                        await this.loadData();
-                    } catch (e) { alert("Gagal Simpan!"); }
-                    finally { this.isSyncing = false; }
+                        const resJson = await response.json();
+                        
+                        if(resJson.status === 'success') {
+                            this.showForm = false;
+                            await this.loadData();
+                        } else {
+                            alert("Gagal: " + resJson.message);
+                        }
+                    } catch (e) { 
+                        alert("Terjadi kesalahan koneksi!"); 
+                    } finally { 
+                        this.isSyncing = false; 
+                    }
                 },
 
                 async deleteData(nik, when) {
-                    if(!confirm("Hapus laporan ini?")) return;
+                    if(!confirm("Hapus laporan ini secara permanen?")) return;
                     this.isSyncing = true;
                     try {
                         await fetch(SPREADSHEET_API, {
@@ -295,17 +300,18 @@
                         const s = this.searchQuery.toLowerCase();
                         const matchText = (n.nama || '').toLowerCase().includes(s) || 
                                           (n.nik || '').toString().includes(s) || 
-                                          (n.where || '').toLowerCase().includes(s);
+                                          (n.where || '').toLowerCase().includes(s) ||
+                                          (n.detail || '').toLowerCase().includes(s);
                         
                         const status = n.note || 'Belum Close';
                         const matchStatus = this.currentFilter === 'all' || status === this.currentFilter;
 
-                        const date = new Date(n.when);
-                        const matchDate = (!this.filterDateStart || date >= new Date(this.filterDateStart)) && 
-                                          (!this.filterDateEnd || date <= new Date(this.filterDateEnd));
-
-                        return matchText && matchStatus && matchDate;
+                        return matchText && matchStatus;
                     });
+                },
+
+                logout() {
+                    if(confirm("Keluar dari aplikasi?")) window.location.href = "index.html";
                 }
             }
         }
