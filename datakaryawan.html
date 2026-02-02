@@ -168,131 +168,128 @@
     <script>
         const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbwlvT2uodaiijE_nNuKXPbasI0gvtSE9vQTDOtRjFshr3RyvW9eIR8B17NVIVwUK5zfiw/exec";
 
-        function karyawanApp() {
-            return {
-                sidebarOpen: true,
-                isSyncing: false,
-                showForm: false,
-                isEdit: false,
-                searchQuery: '',
-                karyawan: [],
-                nearmiss: [],
-                filterMonth: new Date().getMonth() + 1,
-                filterYear: new Date().getFullYear(),
-                months: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
-                years: [2024, 2025, 2026],
-                formData: { NIK: '', NamaKaryawan: '', Line: '' },
+function karyawanApp() {
+    return {
+        sidebarOpen: true,
+        isSyncing: false,
+        showForm: false,
+        isEdit: false,
+        searchQuery: '',
+        karyawan: [],
+        nearmiss: [],
+        filterMonth: new Date().getMonth() + 1,
+        filterYear: new Date().getFullYear(),
+        months: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+        years: [2024, 2025, 2026],
+        formData: { NIK: '', NamaKaryawan: '', Line: '' },
 
-                async initApp() {
-                    lucide.createIcons();
-                    await this.loadData();
-                },
+        async initApp() {
+            lucide.createIcons();
+            await this.loadData();
+        },
 
-                async loadData() {
-    this.isSyncing = true;
-    try {
-        const r = await fetch(`${SPREADSHEET_API}?t=${Date.now()}`);
-        const d = await r.json();
-        
-        // Sesuaikan mapping agar property konsisten dengan yang diharapkan HTML (NIK, NamaKaryawan, dll)
-        this.karyawan = (d.karyawan || []).map(k => ({
-            NIK: k.nik,
-            NamaKaryawan: k.nama,
-            Line: k.line || '-' // Pastikan di Apps Script juga mengambil kolom Line
-        }));
-        
-        // Simpan data nearmiss (properti dari script adalah: nik, when, dll)
-        this.nearmiss = d.nearmiss || [];
-    } catch (e) {
-        console.error("Gagal load data:", e);
-    } finally {
-        this.isSyncing = false;
-        setTimeout(() => lucide.createIcons(), 100);
-    }
-},
-
-checkReportStatus(nik) {
-    if (!nik || !this.nearmiss.length) return false;
-    
-    return this.nearmiss.some(n => {
-        if (!n.when) return false;
-        
-        const d = new Date(n.when);
-        // Pastikan n.nik (huruf kecil sesuai Apps Script) dibandingkan dengan nik dari tabel
-        return n.nik.toString() === nik.toString() && 
-               (d.getMonth() + 1) == this.filterMonth && 
-               d.getFullYear() == this.filterYear;
-    });
-},
-
-                checkReportStatus(nik) {
-                    return this.nearmiss.some(n => {
-                        const d = new Date(n.When);
-                        return n.NIK.toString() === nik.toString() && 
-                               (d.getMonth() + 1) == this.filterMonth && 
-                               d.getFullYear() == this.filterYear;
-                    });
-                },
-
-                logout() {
-                    if(confirm("Apakah Anda ingin keluar?")) {
-                        window.location.href = "index.html";
-                    }
-                },
-
-                openForm() {
-                    this.isEdit = false;
-                    this.formData = { NIK: '', NamaKaryawan: '', Line: '' };
-                    this.showForm = true;
-                },
-
-                editData(item) {
-                    this.isEdit = true;
-                    this.formData = { ...item };
-                    this.showForm = true;
-                },
-
-                async submitForm() {
-                    this.isSyncing = true;
-                    const action = this.isEdit ? 'updateKaryawan' : 'addKaryawan';
-                    try {
-                        await fetch(SPREADSHEET_API, {
-                            method: 'POST',
-                            body: JSON.stringify({ action, data: this.formData })
-                        });
-                        this.showForm = false;
-                        await this.loadData();
-                    } catch (e) {
-                        alert("Gagal memproses data");
-                    } finally {
-                        this.isSyncing = false;
-                    }
-                },
-
-                async deleteData(nik) {
-                    if(!confirm(`Hapus NIK ${nik}?`)) return;
-                    this.isSyncing = true;
-                    try {
-                        await fetch(SPREADSHEET_API, {
-                            method: 'POST',
-                            body: JSON.stringify({ action: 'deleteKaryawan', nik: nik })
-                        });
-                        await this.loadData();
-                    } catch (e) {
-                        alert("Gagal menghapus data");
-                    } finally {
-                        this.isSyncing = false;
-                    }
-                },
-
-                get filteredKaryawan() {
-                    return this.karyawan.filter(k => {
-                        const s = this.searchQuery.toLowerCase();
-                        return k.NamaKaryawan?.toLowerCase().includes(s) || k.NIK?.toString().includes(s);
-                    });
-                }
+        async loadData() {
+            this.isSyncing = true;
+            try {
+                const r = await fetch(`${SPREADSHEET_API}?t=${Date.now()}`);
+                const d = await r.json();
+                
+                // Sinkronisasi property: r[0] adalah nik, r[1] adalah nama dari Apps Script Anda
+                this.karyawan = (d.karyawan || []).map(k => ({
+                    NIK: k.nik,
+                    NamaKaryawan: k.nama,
+                    Line: k.line || '-' 
+                }));
+                
+                this.nearmiss = d.nearmiss || [];
+            } catch (e) {
+                console.error("Gagal load data:", e);
+                alert("Gagal mengambil data dari server.");
+            } finally {
+                this.isSyncing = false;
+                setTimeout(() => lucide.createIcons(), 100);
             }
+        },
+
+        // Gunakan satu fungsi checkReportStatus yang benar (n.when huruf kecil)
+        checkReportStatus(nik) {
+            if (!nik || !this.nearmiss.length) return false;
+            
+            return this.nearmiss.some(n => {
+                if (!n.when) return false;
+                const d = new Date(n.when);
+                return n.nik.toString() === nik.toString() && 
+                       (d.getMonth() + 1) == this.filterMonth && 
+                       d.getFullYear() == this.filterYear;
+            });
+        },
+
+        logout() {
+            if(confirm("Apakah Anda ingin keluar?")) {
+                window.location.href = "index.html";
+            }
+        },
+
+        openForm() {
+            this.isEdit = false;
+            this.formData = { NIK: '', NamaKaryawan: '', Line: '' };
+            this.showForm = true;
+        },
+
+        editData(item) {
+            this.isEdit = true;
+            this.formData = { ...item };
+            this.showForm = true;
+        },
+
+        async submitForm() {
+            this.isSyncing = true;
+            const action = this.isEdit ? 'updateKaryawan' : 'addKaryawan';
+            try {
+                const response = await fetch(SPREADSHEET_API, {
+                    method: 'POST',
+                    body: JSON.stringify({ action, data: this.formData })
+                });
+                const result = await response.json();
+                if(result.status === 'success') {
+                    this.showForm = false;
+                    await this.loadData();
+                } else {
+                    alert("Error: " + result.message);
+                }
+            } catch (e) {
+                alert("Gagal memproses data. Cek koneksi internet.");
+            } finally {
+                this.isSyncing = false;
+            }
+        },
+
+        async deleteData(nik) {
+            if(!confirm(`Hapus NIK ${nik}?`)) return;
+            this.isSyncing = true;
+            try {
+                await fetch(SPREADSHEET_API, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'deleteKaryawan', nik: nik })
+                });
+                await this.loadData();
+            } catch (e) {
+                alert("Gagal menghapus data");
+            } finally {
+                this.isSyncing = false;
+            }
+        },
+
+        get filteredKaryawan() {
+            return this.karyawan.filter(k => {
+                const s = this.searchQuery.toLowerCase();
+                const nama = k.NamaKaryawan ? k.NamaKaryawan.toLowerCase() : '';
+                const nik = k.NIK ? k.NIK.toString() : '';
+                return nama.includes(s) || nik.includes(s);
+            });
         }
+    }
+}
     </script>
 </body>
 </html>
