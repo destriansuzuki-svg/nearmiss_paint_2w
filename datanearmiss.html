@@ -294,40 +294,49 @@ function nearmissApp() {
 },
 
         async submitForm() {
-            if(!this.formData.Nama || this.formData.Nama === 'NIK TIDAK DITEMUKAN') {
-                return alert("NIK tidak valid!");
-            }
-            
-            this.isSyncing = true;
-            const action = this.isEdit ? 'updateNearmiss' : 'addNearmiss';
-            
-            try {
-                // Pastikan mengirim objek data yang bersih
-                const payload = { 
-                    action, 
-                    data: { ...this.formData } 
-                };
+    if(!this.formData.Nama || this.formData.Nama === 'NIK TIDAK DITEMUKAN') {
+        return alert("NIK tidak valid!");
+    }
+    
+    this.isSyncing = true;
+    const action = this.isEdit ? 'updateNearmiss' : 'addNearmiss';
+    
+    try {
+        // Gunakan variabel terpisah agar payload benar-benar bersih
+        const payload = { 
+            action: action,
+            // Jika delete butuh nik/when di luar objek data, 
+            // pastikan update juga konsisten atau sesuaikan backend
+            data: { ...this.formData },
+            // Tambahkan ini jika backend mencari nik/when di level utama saat update
+            nik: this.formData.NIK,
+            when: this.formData.originalWhen 
+        };
 
-                const response = await fetch(SPREADSHEET_API, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                
-                const resJson = await response.json();
-                
-                if(resJson.status === 'success') {
-                    this.showForm = false;
-                    await this.loadData();
-                } else {
-                    alert("Gagal menyimpan: " + (resJson.message || "Unknown error"));
-                }
-            } catch (e) { 
-                console.error(e);
-                alert("Koneksi terputus!"); 
-            } finally { 
-                this.isSyncing = false; 
-            }
-        },
+        const response = await fetch(SPREADSHEET_API, {
+            method: 'POST',
+            mode: 'no-cors', // Coba tambahkan ini jika masalahnya adalah CORS
+            body: JSON.stringify(payload)
+        });
+        
+        // CATATAN: Jika menggunakan 'no-cors', Anda tidak bisa membaca response.json()
+        // Jika tetap ingin membaca response, pastikan backend mengizinkan CORS
+        
+        const resJson = await response.json();
+        
+        if(resJson.status === 'success') {
+            this.showForm = false;
+            await this.loadData();
+        } else {
+            alert("Gagal: " + resJson.message);
+        }
+    } catch (e) { 
+        console.error("Error Detail:", e);
+        alert("Koneksi terputus! Periksa apakah URL Web App sudah benar dan di-deploy sebagai 'Anyone'."); 
+    } finally { 
+        this.isSyncing = false; 
+    }
+},
 
         async deleteData(nik, when) {
             if(!confirm("Hapus laporan ini?")) return;
