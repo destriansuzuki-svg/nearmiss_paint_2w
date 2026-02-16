@@ -73,7 +73,7 @@
                     </div>
                     <div class="flex bg-slate-100 p-1 rounded-xl">
                         <button @click="currentFilter = 'all'" :class="currentFilter === 'all' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">Semua</button>
-                        <button @click="currentFilter = 'Belum Close'" :class="currentFilter === 'Belum Close' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">Pending</button>
+                        <button @click="currentFilter = 'Belum Close'" :class="currentFilter === 'Belum Close' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">Open</button>
                         <button @click="currentFilter = 'Close'" :class="currentFilter === 'Close' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">Closed</button>
                     </div>
                     <button @click="openForm()" class="bg-[#111827] text-white px-5 py-2.5 rounded-xl font-black text-[9px] tracking-widest uppercase hover:bg-blue-600 transition-all">+ Tambah Laporan</button>
@@ -109,7 +109,7 @@
                                             <div class="text-[9px] font-bold text-slate-400 mt-1" x-show="n.tergetdate">Target: <span x-text="formatDate(n.tergetdate)"></span></div>
                                         </td>
                                         <td class="p-4 text-center border-b border-slate-50 align-top">
-                                            <span :class="n.note === 'Close' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'" class="text-[8px] px-2 py-1 rounded-full font-black uppercase" x-text="n.note === 'Close' ? 'Closed' : 'Pending'"></span>
+                                            <span :class="n.note === 'Close' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'" class="text-[8px] px-2 py-1 rounded-full font-black uppercase" x-text="n.note === 'Close' ? 'Closed' : 'Open'"></span>
                                         </td>
                                         <td class="p-4 pr-8 text-center border-b border-slate-50 align-top">
                                             <div class="flex gap-1 justify-center opacity-0 group-hover:opacity-100 transition-all">
@@ -166,7 +166,7 @@
                 <div class="col-span-2 space-y-1">
                     <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Status</label>
                     <select x-model="formData.note" class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100">
-                        <option value="Belum Close">Pending (Belum Close)</option>
+                        <option value="Belum Close">Open (Belum Close)</option>
                         <option value="Close">Closed (Close)</option>
                     </select>
                 </div>
@@ -367,7 +367,7 @@ function nearmissApp() {
                                   (n.nik || '').toString().includes(s) || 
                                   (n.where || '').toLowerCase().includes(s);
                 
-                // 2. Filter Status (Pending vs Closed)
+                // 2. Filter Status (Open vs Closed)
                 // Pastikan membandingkan value yang sama dengan tombol filter
                 const currentStatus = n.note === 'Close' ? 'Close' : 'Belum Close';
                 const matchStatus = this.currentFilter === 'all' || currentStatus === this.currentFilter;
