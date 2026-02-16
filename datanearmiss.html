@@ -300,45 +300,73 @@ function nearmissApp() {
 },
 
         async submitForm() {
-    if(!this.formData.Nama || this.formData.Nama === 'NIK TIDAK DITEMUKAN') {
+    // Validasi input Nama
+    if (!this.formData.Nama || this.formData.Nama === 'NIK TIDAK DITEMUKAN') {
         return alert("NIK tidak valid!");
     }
     
     this.isSyncing = true;
     const action = this.isEdit ? 'updateNearmiss' : 'addNearmiss';
     
-    try {
-        // Gunakan variabel terpisah agar payload benar-benar bersih
-        const payload = { 
-            action: action,
-            // Jika delete butuh nik/when di luar objek data, 
-            // pastikan update juga konsisten atau sesuaikan backend
-            data: { ...this.formData },
-            // Tambahkan ini jika backend mencari nik/when di level utama saat update
-            nik: this.formData.NIK,
-            when: this.formData.originalWhen 
-        };
+    // Siapkan payload yang bersih
+    // 'nik' dan 'when' (originalWhen) diletakkan di level utama agar mudah dibaca backend saat update
+    const payload = { 
+        action: action,
+        data: { ...this.formData },
+        nik: this.formData.NIK,
+        when: this.formData.originalWhen 
+    };
 
+    try {
         const response = await fetch(SPREADSHEET_API, {
             method: 'POST',
-            mode: 'no-cors', // Coba tambahkan ini jika masalahnya adalah CORS
+            // mode: 'no-cors' DIHAPUS agar response.json() bisa berfungsi
             body: JSON.stringify(payload)
         });
         
-        // CATATAN: Jika menggunakan 'no-cors', Anda tidak bisa membaca response.json()
-        // Jika tetap ingin membaca response, pastikan backend mengizinkan CORS
-        
+        // Sekarang kita bisa membaca respon asli dari Google Apps Script
         const resJson = await response.json();
         
-        if(resJson.status === 'success') {
+        if (resJson.status === 'success') {
+            alert(resJson.message); // Memberi tahu pengguna data berhasil disimpan
             this.showForm = false;
-            await this.loadData();
+            await this.loadData(); // Segarkan tampilan data
         } else {
             alert("Gagal: " + resJson.message);
         }
     } catch (e) { 
         console.error("Error Detail:", e);
-        alert("Koneksi terputus! Periksa apakah URL Web App sudah benar dan di-deploy sebagai 'Anyone'."); 
+        alert("Gagal terhubung ke server! Pastikan URL Web App sudah benar dan di-deploy sebagai 'Anyone'."); 
+    } finally { 
+        this.isSyncing = false; 
+    }
+},
+
+async deleteData(nik, when) {
+    if (!confirm("Apakah Anda yakin ingin menghapus laporan ini?")) return;
+    
+    this.isSyncing = true;
+    try {
+        const response = await fetch(SPREADSHEET_API, {
+            method: 'POST',
+            body: JSON.stringify({ 
+                action: 'deleteNearmiss', 
+                nik: nik, 
+                when: when // Menggunakan timestamp asli untuk pencarian baris
+            })
+        });
+        
+        const res = await response.json();
+        
+        if (res.status === 'success') {
+            alert("Data berhasil dihapus!");
+            await this.loadData();
+        } else {
+            alert("Gagal menghapus: " + res.message);
+        }
+    } catch (e) { 
+        console.error("Delete Error:", e);
+        alert("Gagal menghapus data! Periksa koneksi internet Anda."); 
     } finally { 
         this.isSyncing = false; 
     }
