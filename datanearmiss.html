@@ -307,30 +307,25 @@ function nearmissApp() {
     this.isSyncing = true;
     const action = this.isEdit ? 'updateNearmiss' : 'addNearmiss';
     
-    try {
-        // Gunakan variabel terpisah agar payload benar-benar bersih
-        const payload = { 
-            action: action,
-            // Jika delete butuh nik/when di luar objek data, 
-            // pastikan update juga konsisten atau sesuaikan backend
-            data: { ...this.formData },
-            // Tambahkan ini jika backend mencari nik/when di level utama saat update
-            nik: this.formData.NIK,
-            when: this.formData.originalWhen 
-        };
+    // Payload disesuaikan agar Apps Script bisa menemukan baris berdasarkan NIK & Waktu Asli
+    const payload = { 
+        action: action,
+        data: { ...this.formData },
+        nik: this.formData.NIK,
+        when: this.formData.originalWhen 
+    };
 
+    try {
         const response = await fetch(SPREADSHEET_API, {
             method: 'POST',
-            mode: 'no-cors', // Coba tambahkan ini jika masalahnya adalah CORS
+            // mode: 'no-cors' DIHAPUS agar bisa membaca respon JSON
             body: JSON.stringify(payload)
         });
-        
-        // CATATAN: Jika menggunakan 'no-cors', Anda tidak bisa membaca response.json()
-        // Jika tetap ingin membaca response, pastikan backend mengizinkan CORS
         
         const resJson = await response.json();
         
         if(resJson.status === 'success') {
+            alert(resJson.message);
             this.showForm = false;
             await this.loadData();
         } else {
@@ -338,44 +333,39 @@ function nearmissApp() {
         }
     } catch (e) { 
         console.error("Error Detail:", e);
-        alert("Koneksi terputus! Periksa apakah URL Web App sudah benar dan di-deploy sebagai 'Anyone'."); 
+        alert("Terjadi kesalahan! Pastikan Apps Script sudah di-deploy sebagai 'Anyone'."); 
     } finally { 
         this.isSyncing = false; 
     }
 },
 
-        async deleteData(nik, when) {
-            if(!confirm("Hapus laporan ini?")) return;
-            this.isSyncing = true;
-            try {
-                const response = await fetch(SPREADSHEET_API, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'deleteNearmiss', nik, when })
-                });
-                const res = await response.json();
-                if(res.status === 'success') await this.loadData();
-            } catch (e) { alert("Gagal hapus data!"); }
-            finally { this.isSyncing = false; }
-        },
-
-        // Perbaikan logika Filter
-        get filteredNearmiss() {
-            return this.nearmiss.filter(n => {
-                // 1. Filter Pencarian Teks
-                const s = this.searchQuery.toLowerCase();
-                const matchText = (n.nama || '').toLowerCase().includes(s) || 
-                                  (n.nik || '').toString().includes(s) || 
-                                  (n.where || '').toLowerCase().includes(s);
-                
-                // 2. Filter Status (Open vs Closed)
-                // Pastikan membandingkan value yang sama dengan tombol filter
-                const currentStatus = n.note === 'Close' ? 'Close' : 'Belum Close';
-                const matchStatus = this.currentFilter === 'all' || currentStatus === this.currentFilter;
-                
-                return matchText && matchStatus;
-            });
-        },
-
+            async deleteData(nik, when) {
+    if(!confirm("Hapus laporan ini?")) return;
+    this.isSyncing = true;
+    try {
+        const response = await fetch(SPREADSHEET_API, {
+            method: 'POST',
+            body: JSON.stringify({ 
+                action: 'deleteNearmiss', 
+                nik: nik, 
+                when: when 
+            })
+        });
+        
+        const res = await response.json();
+        if(res.status === 'success') {
+            alert("Data berhasil dihapus!");
+            await this.loadData();
+        } else {
+            alert("Gagal: " + res.message);
+        }
+    } catch (e) { 
+        console.error(e);
+        alert("Gagal hapus data!"); 
+    } finally { 
+        this.isSyncing = false; 
+    }
+},
        logout() {
     if(confirm("Keluar dari aplikasi?")) {
         localStorage.clear(); // Hapus role dan status login
