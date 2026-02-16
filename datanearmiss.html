@@ -376,9 +376,12 @@ function nearmissApp() {
             });
         },
 
-        logout() {
-            if(confirm("Keluar dari aplikasi?")) window.location.href = "index.html";
-        }
+       logout() {
+    if(confirm("Keluar dari aplikasi?")) {
+        localStorage.clear(); // Hapus role dan status login
+        window.location.replace("index.html"); // Gunakan replace
+    }
+}
     }
 }
     </script>
