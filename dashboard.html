@@ -7,7 +7,7 @@
     <script>
         if (localStorage.getItem('isLoggedIn') !== 'true' || localStorage.getItem('role') !== 'admin') {
             alert("Akses Ditolak! Halaman ini hanya untuk Admin.");
-            window.location.href = 'index.html'; // Sesuaikan jika nama file login Anda index.html
+            window.location.replace = 'index.html'; // Sesuaikan jika nama file login Anda index.html
         }
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
