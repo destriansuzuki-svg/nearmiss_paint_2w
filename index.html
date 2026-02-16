@@ -24,7 +24,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04a11.357 11.357 0 00-1.573 11.37c1.29 3.56 4.308 5.676 7.691 5.681a11.575 11.575 0 008.122-3.475c.995-1.01 1.631-2.27 1.838-3.585a11.36 11.36 0 00-1.242-10.041z" />
                 </svg>
             </div>
-            <h2 class="text-3xl font-black text-slate-800 tracking-tight">PAINTING 2W</h2>
+            <h2 class="text-3xl font-black text-slate-800 tracking-tight">NEARMISS PAINTING 2W</h2>
             <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em] mt-2">Safety Management System</p>
         </div>
 
@@ -56,14 +56,14 @@
             const user = document.getElementById('username').value.trim();
             const pw = document.getElementById('pw').value;
             
-            if (user === 'admin' && pw === 'admin123') {
+            if (user === 'admin' && pw === 'paint2w123') {
                 localStorage.setItem('role', 'admin');
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('username', user);
                 // Gunakan replace agar tidak bisa di-back
                 window.location.replace('dashboard.html'); 
             } 
-            else if (user === 'user' && pw === 'user123') {
+            else if (user === 'user' && pw === 'paint2w123') {
                 localStorage.setItem('role', 'user');
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('username', user);
