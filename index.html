@@ -56,19 +56,18 @@
             const user = document.getElementById('username').value.trim();
             const pw = document.getElementById('pw').value;
             
-            // Kredensial Admin
             if (user === 'admin' && pw === 'admin123') {
                 localStorage.setItem('role', 'admin');
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('username', user);
-                window.location.href = 'dashboard.html'; 
+                // Gunakan replace agar tidak bisa di-back
+                window.location.replace('dashboard.html'); 
             } 
-            // Kredensial User Biasa
             else if (user === 'user' && pw === 'user123') {
                 localStorage.setItem('role', 'user');
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('username', user);
-                window.location.href = 'datanearmiss.html';
+                window.location.replace('datanearmiss.html');
             } 
             else {
                 alert('Username atau Password Salah!');
@@ -76,14 +75,17 @@
             }
         }
 
-        // Cek sesi saat halaman dimuat
-        window.onload = () => {
+        // Script Proteksi: Cek sesi saat halaman dimuat
+        window.addEventListener('load', () => {
             if (localStorage.getItem('isLoggedIn') === 'true') {
                 const role = localStorage.getItem('role');
-                // Arahkan otomatis jika sudah login
-                window.location.href = (role === 'admin') ? 'dashboard.html' : 'datanearmiss.html';
+                if (role === 'admin') {
+                    window.location.replace('dashboard.html');
+                } else {
+                    window.location.replace('datanearmiss.html');
+                }
             }
-        };
+        });
     </script>
 </body>
 </html>
