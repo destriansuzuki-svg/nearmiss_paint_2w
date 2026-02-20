@@ -6,6 +6,7 @@
     <title>Login - Painting 2W Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .glass-effect { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
@@ -38,6 +39,10 @@
                 <input type="password" id="pw" placeholder="Password" 
                     class="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-blue-600 font-bold text-center text-lg transition-all focus:bg-white focus:shadow-inner focus:border-blue-200"
                     onkeypress="if(event.key === 'Enter') handleLogin()">
+                
+                <button type="button" onclick="togglePassword()" class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors">
+                    <i id="toggleIcon" data-lucide="eye"></i>
+                </button>
             </div>
             
             <button onclick="handleLogin()" 
@@ -52,6 +57,24 @@
     </div>
 
     <script>
+        // Inisialisasi Ikon Lucide
+        lucide.createIcons();
+
+        function togglePassword() {
+            const passwordInput = document.getElementById('pw');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.setAttribute('data-lucide', 'eye');
+            }
+            // Re-render ikon setelah perubahan attribute
+            lucide.createIcons();
+        }
+
         function handleLogin() {
             const user = document.getElementById('username').value.trim();
             const pw = document.getElementById('pw').value;
@@ -60,7 +83,6 @@
                 localStorage.setItem('role', 'admin');
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('username', user);
-                // Gunakan replace agar tidak bisa di-back
                 window.location.replace('dashboard.html'); 
             } 
             else if (user === 'user' && pw === 'paint2w123') {
@@ -75,7 +97,6 @@
             }
         }
 
-        // Script Proteksi: Cek sesi saat halaman dimuat
         window.addEventListener('load', () => {
             if (localStorage.getItem('isLoggedIn') === 'true') {
                 const role = localStorage.getItem('role');
