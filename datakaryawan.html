@@ -79,28 +79,37 @@
                     </div>
 			
                     <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-100">
-    			<select x-model="filterStatus" class="bg-transparent text-[10px] font-black uppercase px-2 outline-none cursor-pointer">
-        		<option value="all">SEMUA STATUS</option>
-        		<option value="done">SDAH LAPOR</option>
-        		<option value="pending">BLM LAPOR</option>
-    			</select>
+    <select x-model="filterStatus" class="bg-transparent text-[10px] font-black uppercase px-2 outline-none cursor-pointer">
+        <option value="all">SEMUA STATUS</option>
+        <option value="done">SDAH LAPOR</option>
+        <option value="pending">BLM LAPOR</option>
+    </select>
 
-    			<div class="w-[1px] h-4 bg-slate-200"></div>
+    <div class="w-[1px] h-4 bg-slate-200"></div>
 
-    			<select x-model="filterMonth" class="bg-transparent text-[10px] font-black uppercase px-2 outline-none cursor-pointer">
-        		<template x-for="(m, i) in months" :key="i">
-            		<option :value="i + 1" x-text="m"></option>
-       		 	</template>
-    			</select>
+    <select x-model="filterLine" class="bg-transparent text-[10px] font-black uppercase px-2 outline-none cursor-pointer max-w-[100px]">
+        <option value="all">SEMUA LINE</option>
+        <template x-for="line in uniqueLines" :key="line">
+            <option :value="line" x-text="line"></option>
+        </template>
+    </select>
 
-    			<div class="w-[1px] h-4 bg-slate-200"></div>
+    <div class="w-[1px] h-4 bg-slate-200"></div>
 
-    			<select x-model="filterYear" class="bg-transparent text-[10px] font-black uppercase px-2 outline-none cursor-pointer">
-        		<template x-for="y in years" :key="y">
-            		<option :value="y" x-text="y"></option>
-        		</template>
-			</select>
-			</div>
+    <select x-model="filterMonth" class="bg-transparent text-[10px] font-black uppercase px-2 outline-none cursor-pointer">
+        <template x-for="(m, i) in months" :key="i">
+            <option :value="i + 1" x-text="m"></option>
+        </template>
+    </select>
+
+    <div class="w-[1px] h-4 bg-slate-200"></div>
+
+    <select x-model="filterYear" class="bg-transparent text-[10px] font-black uppercase px-2 outline-none cursor-pointer">
+        <template x-for="y in years" :key="y">
+            <option :value="y" x-text="y"></option>
+        </template>
+    </select>
+</div>
                     
                     <button @click="openForm()" class="btn-primary text-white px-6 py-3 rounded-2xl font-black text-[9px] tracking-widest uppercase">
                         + Tambah Karyawan
@@ -191,7 +200,8 @@ function karyawanApp() {
         showForm: false,
         isEdit: false,
         searchQuery: '',
-	filterStatus: 'all',
+		filterStatus: 'all',
+		filterLine: 'all',
         karyawan: [],
         nearmiss: [],
         filterMonth: new Date().getMonth() + 1,
@@ -297,29 +307,48 @@ function karyawanApp() {
             }
         },
 
+// 1. Getter untuk mengambil daftar Line unik dari data karyawan
+        get uniqueLines() {
+            // Mengambil semua properti Line, hapus spasi, filter yang bukan kosong
+            const lines = this.karyawan
+                .map(k => k.Line ? k.Line.toUpperCase().trim() : '-')
+                .filter(l => l !== '-');
+            
+            // Set() digunakan untuk menghapus duplikat, lalu diurutkan (sort)
+            return [...new Set(lines)].sort();
+        },
+
+        // 2. Perbaikan logika filter gabungan
         get filteredKaryawan() {
-   	return this.karyawan.filter(k => {
-        // 1. Filter berdasarkan Search Bar
-        const s = this.searchQuery.toLowerCase();
-        const nama = k.NamaKaryawan ? k.NamaKaryawan.toLowerCase() : '';
-        const nik = k.NIK ? k.NIK.toString() : '';
-        const matchesSearch = nama.includes(s) || nik.includes(s);
+            return this.karyawan.filter(k => {
+                // A. Filter berdasarkan Search Bar (Nama atau NIK)
+                const s = this.searchQuery.toLowerCase();
+                const nama = k.NamaKaryawan ? k.NamaKaryawan.toLowerCase() : '';
+                const nik = k.NIK ? k.NIK.toString() : '';
+                const matchesSearch = nama.includes(s) || nik.includes(s);
 
-        // 2. Filter berdasarkan Status Laporan
-        const isReported = this.checkReportStatus(k.NIK);
-        let matchesStatus = true;
-        
-        if (this.filterStatus === 'done') {
-            matchesStatus = isReported === true;
-        } else if (this.filterStatus === 'pending') {
-            matchesStatus = isReported === false;
+                // B. Filter berdasarkan Status Laporan (Sudah/Belum)
+                const isReported = this.checkReportStatus(k.NIK);
+                let matchesStatus = true;
+                if (this.filterStatus === 'done') {
+                    matchesStatus = isReported === true;
+                } else if (this.filterStatus === 'pending') {
+                    matchesStatus = isReported === false;
+                }
+
+                // C. Filter berdasarkan Line
+                let matchesLine = true;
+                if (this.filterLine !== 'all') {
+                    // Pastikan perbandingan string tidak sensitif huruf besar/kecil (case-insensitive)
+                    matchesLine = (k.Line || '').toUpperCase().trim() === this.filterLine.toUpperCase().trim();
+                }
+
+                // Hasil akhir: Karyawan harus lolos SEMUA kriteria di atas
+                return matchesSearch && matchesStatus && matchesLine;
+            });
         }
-
-        return matchesSearch && matchesStatus;
-  	  });
-	}
     }
 }
-    </script>
+</script>
 </body>
 </html>
