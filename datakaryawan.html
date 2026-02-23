@@ -3,110 +3,323 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Painting 2W Management System</title>
+    <title>Karyawan - Painting 2W</title>
+    <script>
+    if (localStorage.getItem('isLoggedIn') !== 'true' || localStorage.getItem('role') !== 'admin') {
+        alert("Akses Terlarang!");
+        window.location.replace('datanearmiss.html');
+    }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass-effect { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-        input::placeholder { font-weight: 500; opacity: 0.5; }
+        [x-cloak] { display: none !important; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; overflow: hidden; }
+        .sidebar-active {
+            background: linear-gradient(90deg, #2563eb, #3b82f6);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            color: white !important;
+        }
+        .btn-primary { background-color: #0f172a; transition: all 0.3s; }
+        .btn-primary:hover { background-color: #2563eb; transform: translateY(-1px); }
     </style>
 </head>
-<body class="bg-[#0f172a] flex items-center justify-center min-h-screen px-4">
-    
-    <div class="fixed top-0 left-0 w-64 h-64 bg-blue-600 rounded-full filter blur-[120px] opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
-    <div class="fixed bottom-0 right-0 w-96 h-96 bg-blue-500 rounded-full filter blur-[150px] opacity-20 translate-x-1/2 translate-y-1/2"></div>
+<body x-data="karyawanApp()" x-init="initApp()">
 
-    <div class="glass-effect p-10 rounded-[3rem] shadow-2xl w-full max-w-md text-center relative z-10 border border-white/20">
-        <div class="mb-8">
-            <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-3xl mb-4 shadow-xl shadow-blue-500/30">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04a11.357 11.357 0 00-1.573 11.37c1.29 3.56 4.308 5.676 7.691 5.681a11.575 11.575 0 008.122-3.475c.995-1.01 1.631-2.27 1.838-3.585a11.36 11.36 0 00-1.242-10.041z" />
-                </svg>
-            </div>
-            <h2 class="text-3xl font-black text-slate-800 tracking-tight">NEARMISS PAINTING 2W</h2>
-            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em] mt-2">Safety Management System</p>
-        </div>
-
-        <div class="space-y-4">
-            <div class="relative">
-                <input type="text" id="username" placeholder="Username" 
-                    class="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-blue-600 font-bold text-center text-lg transition-all focus:bg-white focus:shadow-inner focus:border-blue-200">
-            </div>
-
-            <div class="relative">
-                <input type="password" id="pw" placeholder="Password" 
-                    class="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-blue-600 font-bold text-center text-lg transition-all focus:bg-white focus:shadow-inner focus:border-blue-200"
-                    onkeypress="if(event.key === 'Enter') handleLogin()">
-                
-                <button type="button" onclick="togglePassword()" class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors">
-                    <i id="toggleIcon" data-lucide="eye"></i>
+    <div class="flex h-screen w-full overflow-hidden">
+        <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-[#0f172a] text-white transition-all duration-300 flex flex-col z-50">
+            <div class="p-6 flex items-center justify-between">
+                <h1 x-show="sidebarOpen" class="font-black text-lg italic tracking-tighter uppercase">
+                    <span class="text-blue-500">Painting</span>2W
+                </h1>
+                <button @click="sidebarOpen = !sidebarOpen" class="text-slate-400 hover:text-white">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
                 </button>
             </div>
+            <nav class="flex-1 px-3 space-y-1">
+                <a href="dashboard.html" class="flex items-center w-full px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all font-bold">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Dashboard</span>
+                </a>
+                <a href="datanearmiss.html" class="flex items-center w-full px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all font-bold">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Nearmiss</span>
+                </a>
+                <a href="#" class="flex items-center w-full px-4 py-3 rounded-xl sidebar-active font-bold">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Karyawan</span>
+                </a>
+            </nav>
             
-            <button onclick="handleLogin()" 
-                class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 active:scale-[0.98] transition-all shadow-xl shadow-blue-200">
-                Masuk ke Sistem
-            </button>
-        </div>
+            <div class="p-4 border-t border-slate-800">
+                <button @click="logout()" class="flex items-center w-full px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all font-bold">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Keluar</span>
+                </button>
+            </div>
+        </aside>
 
-        <div class="mt-10 pt-6 border-t border-slate-100 text-slate-400 text-[11px] font-semibold">
-            <p>&copy; 2026 - Painting 2W Development</p>
+        <div class="flex-1 flex flex-col min-w-0">
+            <header class="bg-white px-8 py-4 flex justify-between items-center border-b border-slate-100 shadow-sm">
+                <h2 class="text-xl font-extrabold text-[#1e293b] italic uppercase tracking-tight">Data Karyawan</h2>
+                <div @click="loadData()" class="cursor-pointer bg-slate-50 px-4 py-1.5 rounded-full flex items-center gap-2 text-slate-400 font-bold text-[10px] border border-slate-100 transition-all hover:bg-white">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5" :class="isSyncing ? 'animate-spin text-blue-500' : ''"></i>
+                    <span x-text="isSyncing ? 'SYNCING...' : 'REFRESH'"></span>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-6 space-y-6">
+                <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 flex flex-wrap items-center gap-4">
+                    <div class="relative flex-1 min-w-[200px]">
+                        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-4 h-4"></i>
+                        <input type="text" x-model="searchQuery" placeholder="Cari NIK atau Nama..." 
+                               class="w-full pl-10 pr-4 py-3 bg-slate-50 border-none rounded-2xl outline-none text-[11px] font-medium">
+                    </div>
+			
+                    <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+    			<select x-model="filterStatus" class="bg-transparent text-[10px] font-black uppercase px-2 outline-none cursor-pointer">
+        		<option value="all">SEMUA STATUS</option>
+        		<option value="done">SDAH LAPOR</option>
+        		<option value="pending">BLM LAPOR</option>
+    			</select>
+
+    			<div class="w-[1px] h-4 bg-slate-200"></div>
+
+    			<select x-model="filterMonth" class="bg-transparent text-[10px] font-black uppercase px-2 outline-none cursor-pointer">
+        		<template x-for="(m, i) in months" :key="i">
+            		<option :value="i + 1" x-text="m"></option>
+       		 	</template>
+    			</select>
+
+    			<div class="w-[1px] h-4 bg-slate-200"></div>
+
+    			<select x-model="filterYear" class="bg-transparent text-[10px] font-black uppercase px-2 outline-none cursor-pointer">
+        		<template x-for="y in years" :key="y">
+            		<option :value="y" x-text="y"></option>
+        		</template>
+			</select>
+			</div>
+                    
+                    <button @click="openForm()" class="btn-primary text-white px-6 py-3 rounded-2xl font-black text-[9px] tracking-widest uppercase">
+                        + Tambah Karyawan
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden mb-10">
+                    <div class="overflow-x-auto p-4">
+                        <table class="w-full border-separate border-spacing-0">
+                            <thead>
+                                <tr class="bg-[#1e293b]">
+                                    <th class="p-4 pl-8 rounded-l-full text-[9px] font-black uppercase tracking-widest text-white text-left">NIK Anggota</th>
+                                    <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-left">Nama Lengkap</th>
+                                    <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-left">Line / Pos</th>
+                                    <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-center">Status Laporan</th>
+                                    <th class="p-4 pr-8 rounded-r-full text-[9px] font-black uppercase tracking-widest text-white text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                <template x-for="(k, idx) in filteredKaryawan" :key="idx">
+                                    <tr class="hover:bg-slate-50/50 transition-colors group">
+                                        <td class="p-4 pl-8 text-[11px] font-bold text-blue-600" x-text="k.NIK"></td>
+                                        <td class="p-4 text-[11px] font-bold text-slate-700 uppercase" x-text="k.NamaKaryawan"></td>
+                                        <td class="p-4 text-[10px] text-slate-500 font-semibold" x-text="k.Line"></td>
+                                        <td class="p-4 text-center">
+                                            <div class="flex justify-center">
+                                                <template x-if="checkReportStatus(k.NIK)">
+                                                    <div class="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                                                        <i data-lucide="check" class="w-3.5 h-3.5 stroke-[4]"></i>
+                                                    </div>
+                                                </template>
+                                                <template x-if="!checkReportStatus(k.NIK)">
+                                                    <div class="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+                                                        <i data-lucide="x" class="w-3.5 h-3.5 stroke-[4]"></i>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </td>
+                                        <td class="p-4 pr-8 text-center">
+                                            <div class="flex gap-2 justify-center opacity-0 group-hover:opacity-100 transition-all">
+                                                <button @click="editData(k)" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                                <button @click="deleteData(k.NIK)" class="p-2 text-red-500 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div x-show="showForm" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-8">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
+                <h3 class="text-sm font-black uppercase italic tracking-tight text-slate-800" x-text="isEdit ? 'Edit Karyawan' : 'Tambah Karyawan'"></h3>
+                <button @click="showForm = false" class="text-slate-400 hover:text-red-500"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form @submit.prevent="submitForm" class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">NIK</label>
+                    <input type="text" x-model="formData.NIK" required :disabled="isEdit" class="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none text-[11px] font-bold outline-none ring-1 ring-slate-100 focus:ring-blue-500">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Nama Lengkap</label>
+                    <input type="text" x-model="formData.NamaKaryawan" required class="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none text-[11px] font-bold outline-none ring-1 ring-slate-100 focus:ring-blue-500 uppercase">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Line / Pos</label>
+                    <input type="text" x-model="formData.Line" required class="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none text-[11px] font-bold outline-none ring-1 ring-slate-100 focus:ring-blue-500 uppercase">
+                </div>
+                <button type="submit" :disabled="isSyncing" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-700 transition-all">
+                    <span x-text="isSyncing ? 'SEDANG MEMPROSES...' : 'SIMPAN DATA'"></span>
+                </button>
+            </form>
         </div>
     </div>
 
     <script>
-        // Inisialisasi Ikon Lucide
-        lucide.createIcons();
+        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbwlvT2uodaiijE_nNuKXPbasI0gvtSE9vQTDOtRjFshr3RyvW9eIR8B17NVIVwUK5zfiw/exec";
 
-        function togglePassword() {
-            const passwordInput = document.getElementById('pw');
-            const toggleIcon = document.getElementById('toggleIcon');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggleIcon.setAttribute('data-lucide', 'eye-off');
-            } else {
-                passwordInput.type = 'password';
-                toggleIcon.setAttribute('data-lucide', 'eye');
-            }
-            // Re-render ikon setelah perubahan attribute
+function karyawanApp() {
+    return {
+        sidebarOpen: true,
+        isSyncing: false,
+        showForm: false,
+        isEdit: false,
+        searchQuery: '',
+	filterStatus: 'all',
+        karyawan: [],
+        nearmiss: [],
+        filterMonth: new Date().getMonth() + 1,
+        filterYear: new Date().getFullYear(),
+        months: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+        years: [2026, 2027, 2028],
+        formData: { NIK: '', NamaKaryawan: '', Line: '' },
+
+        async initApp() {
             lucide.createIcons();
-        }
+            await this.loadData();
+        },
 
-        function handleLogin() {
-            const user = document.getElementById('username').value.trim();
-            const pw = document.getElementById('pw').value;
+        async loadData() {
+            this.isSyncing = true;
+            try {
+                const r = await fetch(`${SPREADSHEET_API}?t=${Date.now()}`);
+                const d = await r.json();
+                
+                // Sinkronisasi property: r[0] adalah nik, r[1] adalah nama dari Apps Script Anda
+                this.karyawan = (d.karyawan || []).map(k => ({
+                    NIK: k.nik,
+                    NamaKaryawan: k.nama,
+                    Line: k.line || '-' 
+                }));
+                
+                this.nearmiss = d.nearmiss || [];
+            } catch (e) {
+                console.error("Gagal load data:", e);
+                alert("Gagal mengambil data dari server.");
+            } finally {
+                this.isSyncing = false;
+                setTimeout(() => lucide.createIcons(), 100);
+            }
+        },
+
+        // Gunakan satu fungsi checkReportStatus yang benar (n.when huruf kecil)
+        checkReportStatus(nik) {
+            if (!nik || !this.nearmiss.length) return false;
             
-            if (user === 'admin' && pw === 'paint2w123') {
-                localStorage.setItem('role', 'admin');
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('username', user);
-                window.location.replace('dashboard.html'); 
-            } 
-            else if (user === 'user' && pw === 'paint2w123') {
-                localStorage.setItem('role', 'user');
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('username', user);
-                window.location.replace('datanearmiss.html');
-            } 
-            else {
-                alert('Username atau Password Salah!');
-                document.getElementById('pw').value = '';
+            return this.nearmiss.some(n => {
+                if (!n.when) return false;
+                const d = new Date(n.when);
+                return n.nik.toString() === nik.toString() && 
+                       (d.getMonth() + 1) == this.filterMonth && 
+                       d.getFullYear() == this.filterYear;
+            });
+        },
+
+        logout() {
+            if(confirm("Apakah Anda ingin keluar?")) {
+                window.location.href = "index.html";
             }
+        },
+
+        openForm() {
+            this.isEdit = false;
+            this.formData = { NIK: '', NamaKaryawan: '', Line: '' };
+            this.showForm = true;
+        },
+
+        editData(item) {
+            this.isEdit = true;
+            this.formData = { ...item };
+            this.showForm = true;
+        },
+
+        async submitForm() {
+            this.isSyncing = true;
+            const action = this.isEdit ? 'updateKaryawan' : 'addKaryawan';
+            try {
+                const response = await fetch(SPREADSHEET_API, {
+                    method: 'POST',
+                    body: JSON.stringify({ action, data: this.formData })
+                });
+                const result = await response.json();
+                if(result.status === 'success') {
+                    this.showForm = false;
+                    await this.loadData();
+                } else {
+                    alert("Error: " + result.message);
+                }
+            } catch (e) {
+                alert("Gagal memproses data. Cek koneksi internet.");
+            } finally {
+                this.isSyncing = false;
+            }
+        },
+
+        async deleteData(nik) {
+            if(!confirm(`Hapus NIK ${nik}?`)) return;
+            this.isSyncing = true;
+            try {
+                await fetch(SPREADSHEET_API, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'deleteKaryawan', nik: nik })
+                });
+                await this.loadData();
+            } catch (e) {
+                alert("Gagal menghapus data");
+            } finally {
+                this.isSyncing = false;
+            }
+        },
+
+        get filteredKaryawan() {
+   	return this.karyawan.filter(k => {
+        // 1. Filter berdasarkan Search Bar
+        const s = this.searchQuery.toLowerCase();
+        const nama = k.NamaKaryawan ? k.NamaKaryawan.toLowerCase() : '';
+        const nik = k.NIK ? k.NIK.toString() : '';
+        const matchesSearch = nama.includes(s) || nik.includes(s);
+
+        // 2. Filter berdasarkan Status Laporan
+        const isReported = this.checkReportStatus(k.NIK);
+        let matchesStatus = true;
+        
+        if (this.filterStatus === 'done') {
+            matchesStatus = isReported === true;
+        } else if (this.filterStatus === 'pending') {
+            matchesStatus = isReported === false;
         }
 
-        window.addEventListener('load', () => {
-            if (localStorage.getItem('isLoggedIn') === 'true') {
-                const role = localStorage.getItem('role');
-                if (role === 'admin') {
-                    window.location.replace('dashboard.html');
-                } else {
-                    window.location.replace('datanearmiss.html');
-                }
-            }
-        });
+        return matchesSearch && matchesStatus;
+  	  });
+	}
+    }
+}
     </script>
 </body>
 </html>
