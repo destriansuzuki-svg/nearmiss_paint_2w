@@ -71,6 +71,15 @@
                         <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-4 h-4"></i>
                         <input type="text" x-model="searchQuery" placeholder="Cari NIK, Nama, Lokasi..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none text-[11px] font-medium">
                     </div>
+                    <div class="flex items-center gap-2 bg-slate-100 p-1 px-3 rounded-xl border border-slate-200">
+        <span class="text-[9px] font-black text-slate-400 uppercase">Line:</span>
+        <select x-model="filterLine" class="bg-transparent text-[10px] font-bold uppercase outline-none cursor-pointer text-blue-600">
+            <option value="all">Semua</option>
+            <template x-for="line in uniqueLines" :key="line">
+                <option :value="line" x-text="line"></option>
+            </template>
+        </select>
+    </div>
                     <div class="flex bg-slate-100 p-1 rounded-xl">
                         <button @click="currentFilter = 'all'" :class="currentFilter === 'all' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">Semua</button>
                         <button @click="currentFilter = 'Belum Close'" :class="currentFilter === 'Belum Close' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">Open</button>
@@ -188,6 +197,7 @@ function nearmissApp() {
         isEdit: false,
         searchQuery: '', 
         currentFilter: 'all',
+        filterLine: 'all',
         nearmiss: [],
         karyawan: [],
         formData: { 
@@ -386,21 +396,40 @@ async deleteData(nik, when) {
             finally { this.isSyncing = false; }
         },
 
-        // Perbaikan logika Filter
+        // Menampilkan daftar Line unik dari data karyawan yang ada
+        get uniqueLines() {
+            if (!this.karyawan) return [];
+            const lines = this.karyawan
+                .map(k => k.line || k.Line) // Sesuaikan dengan key di JSON (biasanya k.line)
+                .filter(l => l && l !== '-');
+            return [...new Set(lines)].sort();
+        },
+
         get filteredNearmiss() {
             return this.nearmiss.filter(n => {
-                // 1. Filter Pencarian Teks
+                // 1. Ambil data Line karyawan berdasarkan NIK pelapor
+                const karyawanPelapor = this.karyawan.find(k => 
+                    k.nik && k.nik.toString() === n.nik.toString()
+                );
+                const lineKaryawan = karyawanPelapor ? (karyawanPelapor.line || karyawanPelapor.Line) : '-';
+
+                // 2. Filter Pencarian Teks
                 const s = this.searchQuery.toLowerCase();
                 const matchText = (n.nama || '').toLowerCase().includes(s) || 
                                   (n.nik || '').toString().includes(s) || 
                                   (n.where || '').toLowerCase().includes(s);
                 
-                // 2. Filter Status (Open vs Closed)
-                // Pastikan membandingkan value yang sama dengan tombol filter
+                // 3. Filter Status (Open vs Closed)
                 const currentStatus = n.note === 'Close' ? 'Close' : 'Belum Close';
                 const matchStatus = this.currentFilter === 'all' || currentStatus === this.currentFilter;
+
+                // 4. Filter Line (BARU)
+                let matchLine = true;
+                if (this.filterLine !== 'all') {
+                    matchLine = lineKaryawan === this.filterLine;
+                }
                 
-                return matchText && matchStatus;
+                return matchText && matchStatus && matchLine;
             });
         },
 
