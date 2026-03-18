@@ -21,7 +21,6 @@
         [x-cloak] { display: none !important; } 
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         .sidebar-active { background: linear-gradient(90deg, #2563eb, #3b82f6); color: white !important; }
-        /* Custom scrollbar */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
@@ -29,8 +28,7 @@
 <body x-data="appData()" x-init="initApp()" class="antialiased text-slate-900">
 
     <div class="flex h-screen overflow-hidden">
-        <aside 
-            :class="sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0 lg:w-20'"
+        <aside :class="sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0 lg:w-20'"
             class="fixed lg:relative inset-y-0 left-0 bg-[#0f172a] text-white transition-all duration-300 flex flex-col z-[60] shadow-2xl lg:shadow-none">
             
             <div class="p-5 flex items-center justify-between">
@@ -38,8 +36,7 @@
                     <span class="text-blue-500">PAINTING</span><span class="text-white">2W</span>
                 </h1>
                 <button @click="sidebarOpen = !sidebarOpen" class="text-slate-400 hover:text-white transition-colors">
-                    <i data-lucide="x" x-show="sidebarOpen && window.innerWidth < 1024" class="w-6 h-6"></i>
-                    <i data-lucide="menu" x-show="!sidebarOpen || window.innerWidth >= 1024" class="w-5 h-5"></i>
+                    <i data-lucide="menu" class="w-5 h-5"></i>
                 </button>
             </div>
 
@@ -90,27 +87,27 @@
 
             <main class="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                        <p class="text-[10px] font-bold text-blue-500 uppercase">Total</p>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center lg:text-left">
+                        <p class="text-[10px] font-bold text-blue-500 uppercase">Total Temuan</p>
                         <h4 class="text-2xl font-black text-slate-800" x-text="filteredNearmiss.length">0</h4>
                     </div>
-                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                        <p class="text-[10px] font-bold text-red-500 uppercase">Open</p>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center lg:text-left">
+                        <p class="text-[10px] font-bold text-red-500 uppercase">Open Status</p>
                         <h4 class="text-2xl font-black text-slate-800" x-text="countPending()">0</h4>
                     </div>
-                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                        <p class="text-[10px] font-bold text-green-500 uppercase">Closed</p>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center lg:text-left">
+                        <p class="text-[10px] font-bold text-green-500 uppercase">Closed Status</p>
                         <h4 class="text-2xl font-black text-slate-800" x-text="countClosed()">0</h4>
                     </div>
-                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase">Karyawan</p>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center lg:text-left">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Total Karyawan</p>
                         <h4 class="text-2xl font-black text-slate-800" x-text="karyawan.length">0</h4>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
-                        <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 tracking-widest">Trend Temuan</h4>
+                        <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4 tracking-widest">Trend Temuan Bulanan</h4>
                         <div class="h-60"><canvas id="barChart"></canvas></div>
                     </div>
                     <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
@@ -120,28 +117,31 @@
                 </div>
 
                 <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                    <div class="p-5 border-b border-slate-50 flex justify-between items-center">
-                        <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Aktivitas Terbaru</h4>
-                        <span class="text-[9px] bg-blue-50 text-blue-600 px-2 py-1 rounded-md font-bold" x-text="filteredNearmiss.length + ' DATA'"></span>
+                    <div class="p-5 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                        <div>
+                            <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">10 Aktivitas Terbaru</h4>
+                            <p class="text-[9px] text-slate-400 mt-0.5">Urutan berdasarkan data paling terkini</p>
+                        </div>
+                        <span class="text-[9px] bg-blue-100 text-blue-700 px-2 py-1 rounded-md font-black" x-text="Math.min(filteredNearmiss.length, 10) + ' DATA'"></span>
                     </div>
                     
                     <div class="block lg:hidden divide-y divide-slate-50">
-                        <template x-for="(n, index) in filteredNearmiss.slice(0, 8)" :key="index">
-                            <div class="p-4 space-y-2">
+                        <template x-for="(n, index) in filteredNearmiss.slice(0, 10)" :key="index">
+                            <div class="p-4 space-y-2 hover:bg-slate-50 transition-colors">
                                 <div class="flex justify-between items-start">
-                                    <span class="text-[10px] text-slate-400 font-medium" x-text="formatDate(n.when)"></span>
-                                    <span :class="(n.note === 'Close' || n.status === 'Close') ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'" 
-                                          class="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase"
-                                          x-text="(n.note === 'Close' || n.status === 'Close') ? 'Closed' : 'Pending'">
+                                    <span class="text-[9px] text-slate-400 font-bold bg-slate-100 px-2 py-0.5 rounded" x-text="formatDate(n.when)"></span>
+                                    <span :class="(n.note === 'Close' || n.status === 'Close') ? 'text-green-600' : 'text-red-600'" 
+                                          class="text-[9px] font-black uppercase tracking-tighter"
+                                          x-text="(n.note === 'Close' || n.status === 'Close') ? '● Closed' : '● Pending'">
                                     </span>
                                 </div>
                                 <div>
-                                    <div class="text-xs font-bold text-slate-800 uppercase" x-text="n.nama"></div>
-                                    <div class="text-[11px] text-slate-600 mt-1 italic" x-text="n.detail || n.temuan"></div>
+                                    <div class="text-[11px] font-extrabold text-slate-800 uppercase" x-text="n.nama"></div>
+                                    <div class="text-[10px] text-slate-600 mt-1 leading-relaxed uppercase" x-text="n.detail || n.temuan"></div>
                                 </div>
-                                <div class="text-[10px] text-blue-500 font-semibold flex items-center gap-1">
+                                <div class="flex items-center gap-1 text-blue-500">
                                     <i data-lucide="map-pin" class="w-3 h-3"></i>
-                                    <span x-text="n.where || n.lokasi"></span>
+                                    <span class="text-[9px] font-bold uppercase" x-text="n.where || n.lokasi"></span>
                                 </div>
                             </div>
                         </template>
@@ -151,27 +151,30 @@
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-slate-50/50 text-slate-400 text-[9px] uppercase font-bold">
                                 <tr>
-                                    <th class="px-6 py-3">Waktu</th>
-                                    <th class="px-6 py-3">Pelapor</th>
-                                    <th class="px-6 py-3">Detail Kejadian</th>
-                                    <th class="px-6 py-3 text-center">Status</th>
+                                    <th class="px-6 py-4">Waktu Kejadian</th>
+                                    <th class="px-6 py-4">Nama Pelapor</th>
+                                    <th class="px-6 py-4">Detail Temuan</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50">
                                 <template x-for="(n, index) in filteredNearmiss.slice(0, 10)" :key="index">
-                                    <tr class="hover:bg-slate-50/50 transition-colors">
-                                        <td class="px-6 py-4 text-[10px] text-slate-500" x-text="formatDate(n.when)"></td>
+                                    <tr class="hover:bg-blue-50/30 transition-colors group">
+                                        <td class="px-6 py-4 text-[10px] text-slate-500 font-medium" x-text="formatDate(n.when)"></td>
                                         <td class="px-6 py-4">
                                             <div class="text-[11px] font-bold text-slate-700 uppercase" x-text="n.nama"></div>
                                             <div class="text-[9px] text-blue-500 font-bold" x-text="n.nik"></div>
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="text-[11px] text-slate-600 font-semibold truncate max-w-xs uppercase" x-text="n.detail || n.temuan"></div>
-                                            <div class="text-[9px] text-slate-400 italic" x-text="n.where || n.lokasi"></div>
+                                            <div class="text-[9px] text-slate-400 italic flex items-center gap-1 mt-0.5">
+                                                <i data-lucide="map-pin" class="w-2.5 h-2.5"></i>
+                                                <span x-text="n.where || n.lokasi"></span>
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 text-center">
-                                            <span :class="(n.note === 'Close' || n.status === 'Close') ? 'text-green-500' : 'text-red-500'" 
-                                                  class="text-[10px] font-black uppercase tracking-tighter"
+                                            <span :class="(n.note === 'Close' || n.status === 'Close') ? 'bg-green-100 text-green-600 border-green-200' : 'bg-red-100 text-red-600 border-red-200'" 
+                                                  class="text-[9px] px-3 py-1 rounded-full font-black uppercase border"
                                                   x-text="(n.note === 'Close' || n.status === 'Close') ? 'Closed' : 'Pending'">
                                             </span>
                                         </td>
@@ -212,7 +215,8 @@
                     try {
                         const response = await fetch(`${SPREADSHEET_API}?t=${new Date().getTime()}`);
                         const data = await response.json();
-                        this.allNearmiss = data.nearmiss || [];
+                        // Simpan data & Urutkan berdasarkan waktu terbaru (Desc)
+                        this.allNearmiss = (data.nearmiss || []).sort((a, b) => new Date(b.when) - new Date(a.when));
                         this.karyawan = data.karyawan || [];
                         this.updateDashboard();
                     } catch (error) {
@@ -306,7 +310,7 @@
                         if (!isNaN(date)) {
                             let monthIdx = date.getMonth() - 3; 
                             if (monthIdx < 0) monthIdx += 12;
-                            monthlyCounts[monthIdx]++;
+                            if (monthIdx >= 0 && monthIdx < 12) monthlyCounts[monthIdx]++;
                         }
                     });
                     return monthlyCounts;
