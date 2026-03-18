@@ -3,127 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nearmiss - Painting 2W</title>
+    <title>Nearmiss Monitoring - Painting 2W</title>
+    
     <script>
-    // Gunakan fungsi replace() dengan tanda kurung
-    if (localStorage.getItem('isLoggedIn') !== 'true') {
-        window.location.replace('index.html');
-    }
-</script>
+        if (localStorage.getItem('isLoggedIn') !== 'true') window.location.replace('index.html');
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
         [x-cloak] { display: none !important; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; overflow: hidden; }
-        .sidebar-active { background: linear-gradient(90deg, #2563eb, #3b82f6); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); color: white !important; }
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .active-link { background: #2563eb; color: white !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     </style>
 </head>
-<body x-data="nearmissApp()" x-init="initApp()">
 
-    <div class="flex h-screen w-full overflow-hidden">
-        <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-[#0f172a] text-white transition-all duration-300 flex flex-col z-50">
-            <div class="p-6 flex items-center justify-between">
-                <h1 x-show="sidebarOpen" class="font-black text-lg italic tracking-tighter uppercase">
-                    <span class="text-blue-500">Painting</span><span class="text-white">2W</span>
-                </h1>
-                <button @click="sidebarOpen = !sidebarOpen" class="text-slate-400 hover:text-white">
-                    <i data-lucide="menu" class="w-5 h-5"></i>
-                </button>
+<body x-data="nearmissApp()" x-init="init()" class="antialiased text-slate-900">
+
+    <div class="flex h-screen overflow-hidden">
+        <aside :class="sidebarOpen ? 'w-64' : 'w-20'" 
+               class="hidden lg:flex flex-col bg-[#0f172a] text-white transition-all duration-300 z-50">
+            <div class="p-6">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-600 p-2 rounded-lg">
+                        <i data-lucide="shield-check" class="w-6 h-6"></i>
+                    </div>
+                    <h1 x-show="sidebarOpen" class="font-bold text-xl tracking-tight">P2W<span class="text-blue-500 text-sm">Safety</span></h1>
+                </div>
             </div>
-            <nav class="flex-1 px-3 space-y-1">
-                <a href="dashboard.html" class="flex items-center w-full px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all font-bold">
-                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
-                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Dashboard</span>
+
+            <nav class="flex-1 px-4 mt-4 space-y-2">
+                <a href="dashboard.html" class="flex items-center px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all group">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                    <span x-show="sidebarOpen" class="ml-3 font-medium">Dashboard</span>
                 </a>
-                <a href="#" class="flex items-center w-full px-4 py-3 rounded-xl sidebar-active font-bold">
+                <a href="#" class="flex items-center px-4 py-3 rounded-xl active-link">
                     <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Nearmiss</span>
+                    <span x-show="sidebarOpen" class="ml-3 font-medium">Data Nearmiss</span>
                 </a>
-                <a href="datakaryawan.html" class="flex items-center w-full px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all font-bold">
+                <a href="datakaryawan.html" class="flex items-center px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 transition-all group">
                     <i data-lucide="users" class="w-5 h-5"></i>
-                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Karyawan</span>
+                    <span x-show="sidebarOpen" class="ml-3 font-medium">Karyawan</span>
                 </a>
             </nav>
-            <div class="p-3 border-t border-slate-800">
-                <button @click="logout()" class="flex items-center w-full px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all font-bold">
+
+            <div class="p-4 border-t border-slate-800">
+                <button @click="logout()" class="flex items-center w-full px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all">
                     <i data-lucide="log-out" class="w-5 h-5"></i>
-                    <span x-show="sidebarOpen" class="ml-3 text-[11px] tracking-widest uppercase">Keluar</span>
+                    <span x-show="sidebarOpen" class="ml-3 font-medium">Logout</span>
                 </button>
             </div>
         </aside>
 
-        <div class="flex-1 flex flex-col min-w-0">
-            <header class="bg-white px-8 py-4 flex justify-between items-center border-b border-slate-100 shadow-sm">
-                <h2 class="text-xl font-extrabold text-[#1e293b] italic uppercase tracking-tight">Data Nearmiss</h2>
-                <div @click="loadData()" class="cursor-pointer bg-slate-50 px-4 py-1.5 rounded-full flex items-center gap-2 text-slate-400 font-bold text-[10px] border border-slate-100 transition-all hover:bg-white">
-                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5" :class="isSyncing ? 'animate-spin text-blue-500' : ''"></i>
-                    <span x-text="isSyncing ? 'SYNCING...' : 'REFRESH'"></span>
+        <div class="flex-1 flex flex-col min-w-0 bg-slate-50">
+            <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button @click="sidebarOpen = !sidebarOpen" class="p-2 text-slate-600 hover:bg-slate-100 rounded-lg">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                    <h2 class="text-lg font-bold text-slate-800">Manajemen Temuan Safety</h2>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="hidden md:block text-xs font-semibold text-slate-400 bg-slate-100 px-3 py-1 rounded-full uppercase">Painting 2W Plant</span>
+                    <button @click="fetchData()" class="p-2 rounded-full hover:bg-blue-50 text-blue-600 transition-all">
+                        <i data-lucide="refresh-cw" :class="loading ? 'animate-spin' : ''" class="w-5 h-5"></i>
+                    </button>
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-6 space-y-4 custom-scroll">
-                <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 flex flex-wrap items-center gap-4">
-                    <div class="relative flex-1 min-w-[200px]">
-                        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-4 h-4"></i>
-                        <input type="text" x-model="searchQuery" placeholder="Cari NIK, Nama, Lokasi..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none text-[11px] font-medium">
+            <main class="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar">
+                <div class="mb-6 grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <div class="md:col-span-5 relative">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                        <input type="text" x-model="search" placeholder="Cari NIK, Nama, atau Lokasi..." 
+                               class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm">
                     </div>
-                    <div class="flex items-center gap-2 bg-slate-100 p-1 px-3 rounded-xl border border-slate-200">
-        <span class="text-[9px] font-black text-slate-400 uppercase">Line:</span>
-        <select x-model="filterLine" class="bg-transparent text-[10px] font-bold uppercase outline-none cursor-pointer text-blue-600">
-            <option value="all">Semua</option>
-            <template x-for="line in uniqueLines" :key="line">
-                <option :value="line" x-text="line"></option>
-            </template>
-        </select>
-    </div>
-                    <div class="flex bg-slate-100 p-1 rounded-xl">
-                        <button @click="currentFilter = 'all'" :class="currentFilter === 'all' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">Semua</button>
-                        <button @click="currentFilter = 'Belum Close'" :class="currentFilter === 'Belum Close' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">Open</button>
-                        <button @click="currentFilter = 'Close'" :class="currentFilter === 'Close' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-400'" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all">Closed</button>
+                    <div class="md:col-span-3">
+                        <select x-model="filterLine" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl outline-none shadow-sm cursor-pointer">
+                            <option value="all">Semua Line</option>
+                            <template x-for="line in lines" :key="line">
+                                <option :value="line" x-text="line"></option>
+                            </template>
+                        </select>
                     </div>
-                    <button @click="openForm()" class="bg-[#111827] text-white px-5 py-2.5 rounded-xl font-black text-[9px] tracking-widest uppercase hover:bg-blue-600 transition-all">+ Tambah Laporan</button>
+                    <div class="md:col-span-4 flex gap-2">
+                        <select x-model="filterStatus" class="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl outline-none shadow-sm cursor-pointer">
+                            <option value="all">Semua Status</option>
+                            <option value="Belum Close">Status: Open</option>
+                            <option value="Close">Status: Closed</option>
+                        </select>
+                        <button @click="triggerModal()" class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all">
+                            Buat Laporan
+                        </button>
+                    </div>
                 </div>
 
-                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden min-h-[500px]">
-                    <div class="overflow-x-auto p-4">
-                        <table class="w-full border-separate border-spacing-y-2">
-                            <thead>
-                                <tr class="bg-[#1e293b]">
-                                    <th class="p-4 pl-8 rounded-l-full text-[9px] font-black uppercase tracking-widest text-white text-left">Pelapor</th>
-                                    <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-left">Detail Temuan</th>
-                                    <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-left">Countermeasure</th>
-                                    <th class="p-4 text-[9px] font-black uppercase tracking-widest text-white text-center">Status</th>
-                                    <th class="p-4 pr-8 rounded-r-full text-[9px] font-black uppercase tracking-widest text-white text-center">Aksi</th>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50/50 border-b border-slate-200">
+                                <tr class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                                    <th class="px-6 py-4 text-center w-12">No</th>
+                                    <th class="px-6 py-4">Informasi Pelapor</th>
+                                    <th class="px-6 py-4">Temuan & Lokasi</th>
+                                    <th class="px-6 py-4">Countermeasure</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4 text-right">Opsi</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-[11px]">
-                                <template x-for="(n, idx) in filteredNearmiss" :key="idx">
-                                    <tr class="hover:bg-slate-50 transition-colors group">
-                                        <td class="p-4 pl-8 border-b border-slate-50 align-top">
-                                            <div class="font-bold text-slate-700 uppercase" x-text="n.nama"></div>
-                                            <div class="text-[9px] text-blue-500 font-bold" x-text="n.nik"></div>
-                                            <div class="text-[9px] text-slate-400 mt-1" x-text="formatDate(n.when)"></div>
+                            <tbody class="divide-y divide-slate-100">
+                                <template x-for="(item, i) in filteredData" :key="i">
+                                    <tr class="hover:bg-slate-50/80 transition-colors group">
+                                        <td class="px-6 py-4 text-center text-slate-400 text-sm" x-text="i + 1"></td>
+                                        <td class="px-6 py-4">
+                                            <div class="font-bold text-slate-800" x-text="item.nama"></div>
+                                            <div class="text-[10px] text-slate-500 font-medium" x-text="'NIK: ' + item.nik"></div>
                                         </td>
-                                        <td class="p-4 border-b border-slate-50 align-top max-w-[200px]">
-                                            <div class="font-bold uppercase text-slate-600 mb-1" x-text="n.where"></div>
-                                            <div :class="n.expanded ? '' : 'line-clamp-2'" class="text-slate-500 transition-all duration-300" x-text="n.detail"></div>
-                                            <button x-show="n.detail.length > 60" @click="n.expanded = !n.expanded" class="text-blue-500 font-bold text-[9px] mt-1 hover:underline uppercase" x-text="n.expanded ? 'Show Less' : 'Read More'"></button>
+                                        <td class="px-6 py-4">
+                                            <div class="text-[10px] font-extrabold text-blue-600 mb-1" x-text="item.where"></div>
+                                            <div class="text-sm text-slate-600 leading-tight" x-text="item.detail"></div>
+                                            <div class="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
+                                                <i data-lucide="calendar" class="w-3 h-3"></i>
+                                                <span x-text="prettyDate(item.when)"></span>
+                                            </div>
                                         </td>
-                                        <td class="p-4 border-b border-slate-50 align-top max-w-[200px]">
-                                            <div :class="n.expanded ? '' : 'line-clamp-2'" class="text-slate-500" x-text="n.measure || '-'"></div>
-                                            <div class="text-[9px] font-bold text-slate-400 mt-1" x-show="n.tergetdate">Target: <span x-text="formatDate(n.tergetdate)"></span></div>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-slate-600 italic" x-text="item.measure || 'Menunggu tindakan...'"></div>
+                                            <template x-if="item.tergetdate">
+                                                <div class="text-[10px] text-red-500 font-bold mt-1 uppercase" x-text="'Deadline: ' + prettyDate(item.tergetdate)"></div>
+                                            </template>
                                         </td>
-                                        <td class="p-4 text-center border-b border-slate-50 align-top">
-                                            <span :class="n.note === 'Close' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'" class="text-[8px] px-2 py-1 rounded-full font-black uppercase" x-text="n.note === 'Close' ? 'Closed' : 'Open'"></span>
+                                        <td class="px-6 py-4 text-center">
+                                            <span :class="item.note === 'Close' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'" 
+                                                  class="px-3 py-1 rounded-full text-[10px] font-black uppercase"
+                                                  x-text="item.note === 'Close' ? 'Closed' : 'Open'"></span>
                                         </td>
-                                        <td class="p-4 pr-8 text-center border-b border-slate-50 align-top">
-                                            <div class="flex gap-1 justify-center opacity-0 group-hover:opacity-100 transition-all">
-                                                <button @click="editData(n)" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-                                                <button @click="deleteData(n.nik, n.when)" class="p-2 text-red-500 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                                        <td class="px-6 py-4">
+                                            <div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button @click="triggerModal(item)" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                                <button @click="handleDelete(item.nik, item.when)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><i data-lucide="trash" class="w-4 h-4"></i></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -131,316 +154,207 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <div x-show="filteredData.length === 0" class="py-20 text-center">
+                        <div class="inline-flex p-4 rounded-full bg-slate-50 mb-4">
+                            <i data-lucide="search-x" class="w-10 h-10 text-slate-300"></i>
+                        </div>
+                        <h3 class="text-slate-800 font-bold">Data tidak ditemukan</h3>
+                        <p class="text-slate-400 text-sm">Coba sesuaikan kata kunci atau filter Anda.</p>
+                    </div>
                 </div>
             </main>
         </div>
     </div>
 
-    <div x-show="showForm" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden p-8 space-y-6">
-            <div class="flex justify-between items-center border-b pb-4">
-                <h3 class="text-sm font-black uppercase italic tracking-tight" x-text="isEdit ? 'Edit Laporan' : 'Laporan Nearmiss Baru'"></h3>
-                <button @click="showForm = false" class="text-slate-400 hover:text-red-500"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <div x-show="modal" x-cloak class="fixed inset-0 z-[999] flex items-center justify-center p-4">
+        <div @click="modal = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+        <div class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden shadow-blue-900/20">
+            <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex justify-between items-center">
+                <div>
+                    <h3 class="font-extrabold text-slate-800 text-lg" x-text="editing ? 'Edit Laporan Safety' : 'Buat Laporan Baru'"></h3>
+                    <p class="text-xs text-slate-500">Pastikan data yang dimasukkan sudah sesuai fakta lapangan.</p>
+                </div>
+                <button @click="modal = false" class="text-slate-400 hover:bg-white p-2 rounded-full transition-all"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             
-            <form @submit.prevent="submitForm" class="grid grid-cols-2 gap-4">
-                <div class="col-span-1 space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">NIK</label>
-                    <input type="text" x-model="formData.NIK" required placeholder="Ketik NIK..." class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100 focus:ring-blue-500">
+            <form @submit.prevent="handleSubmit" class="p-8 space-y-5">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">NIK Pelapor</label>
+                        <input type="text" x-model="form.NIK" required placeholder="Input NIK" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-all">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Nama Pelapor</label>
+                        <input type="text" x-model="form.Nama" readonly class="w-full px-4 py-3 bg-slate-100 text-slate-500 border border-slate-200 rounded-xl text-sm font-medium">
+                    </div>
                 </div>
-                <div class="col-span-1 space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Nama Pelapor</label>
-                    <input type="text" x-model="formData.Nama" readonly class="w-full px-4 py-2.5 bg-slate-100 text-slate-500 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100">
+
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Lokasi Kejadian (Where)</label>
+                    <input type="text" x-model="form.where" required placeholder="Contoh: Area Loading Painting" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500">
                 </div>
-                <div class="col-span-1 space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Waktu Kejadian</label>
-                    <input type="datetime-local" x-model="formData.When" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100">
+
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Detail Temuan Bahaya</label>
+                    <textarea x-model="form.detail" rows="3" required placeholder="Jelaskan potensi bahaya yang ditemukan..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500"></textarea>
                 </div>
-                <div class="col-span-1 space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Target Date</label>
-                    <input type="date" x-model="formData.tergetdate" class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100">
+
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Countermeasure / Penanganan</label>
+                    <input type="text" x-model="form.measure" placeholder="Apa tindakan yang sudah/akan diambil?" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500">
                 </div>
-                <div class="col-span-2 space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Lokasi (Where)</label>
-                    <input type="text" x-model="formData.where" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100">
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Waktu Temuan</label>
+                        <input type="datetime-local" x-model="form.When" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Status Close</label>
+                        <select x-model="form.note" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none font-bold">
+                            <option value="Belum Close">OPEN</option>
+                            <option value="Close">CLOSED</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="col-span-2 space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Detail Temuan</label>
-                    <textarea x-model="formData.detail" rows="3" required class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100 focus:ring-blue-500"></textarea>
-                </div>
-                <div class="col-span-2 space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Countermeasure</label>
-                    <input type="text" x-model="formData.measure" class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100">
-                </div>
-                <div class="col-span-2 space-y-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Status</label>
-                    <select x-model="formData.note" class="w-full px-4 py-2.5 bg-slate-50 rounded-xl border-none text-[11px] outline-none ring-1 ring-slate-100">
-                        <option value="Belum Close">Open (Belum Close)</option>
-                        <option value="Close">Closed (Close)</option>
-                    </select>
-                </div>
-                <div class="col-span-2 pt-4">
-                    <button type="submit" :disabled="isSyncing" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-200" x-text="isSyncing ? 'PROSES...' : 'SIMPAN DATA'"></button>
-                </div>
+
+                <button type="submit" :disabled="loading" 
+                        class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-xl shadow-blue-200 hover:bg-blue-700 disabled:bg-slate-300 transition-all flex items-center justify-center gap-2">
+                    <i x-show="loading" data-lucide="loader" class="w-5 h-5 animate-spin"></i>
+                    <span x-text="loading ? 'Menyimpan...' : (editing ? 'Update Laporan' : 'Simpan Laporan')"></span>
+                </button>
             </form>
         </div>
     </div>
 
     <script>
-        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbwlvT2uodaiijE_nNuKXPbasI0gvtSE9vQTDOtRjFshr3RyvW9eIR8B17NVIVwUK5zfiw/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwlvT2uodaiijE_nNuKXPbasI0gvtSE9vQTDOtRjFshr3RyvW9eIR8B17NVIVwUK5zfiw/exec";
 
-function nearmissApp() {
-    return {
-        sidebarOpen: true, 
-        isSyncing: false, 
-        showForm: false, 
-        isEdit: false,
-        searchQuery: '', 
-        currentFilter: 'all',
-        filterLine: 'all',
-        nearmiss: [],
-        karyawan: [],
-        formData: { 
-            NIK: '', Nama: '', When: '', originalWhen: '', 
-            where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close' 
-        },
+        function nearmissApp() {
+            return {
+                sidebarOpen: true,
+                loading: false,
+                modal: false,
+                editing: false,
+                search: '',
+                filterStatus: 'all',
+                filterLine: 'all',
+                rawNearmiss: [],
+                rawKaryawan: [],
+                form: {
+                    NIK: '', Nama: '', When: '', originalWhen: '',
+                    where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close'
+                },
 
-       async initApp() {
-    lucide.createIcons();
-    await this.loadData();
+                async init() {
+                    lucide.createIcons();
+                    await this.fetchData();
+                    this.$watch('form.NIK', v => this.lookupKaryawan(v));
+                },
 
-    // Watcher NIK untuk otomatis isi Nama
-    this.$watch('formData.NIK', (value) => {
-        if (!value) {
-            this.formData.Nama = '';
-            return;
-        }
-        
-        // Pastikan pencarian lebih kuat dengan membersihkan spasi
-        const cleanInput = value.toString().trim();
-        const found = this.karyawan.find(k => 
-            k.nik && k.nik.toString().trim() === cleanInput
-        );
+                async fetchData() {
+                    this.loading = true;
+                    try {
+                        const res = await fetch(`${API_URL}?t=${Date.now()}`);
+                        const data = await res.json();
+                        this.rawNearmiss = data.nearmiss || [];
+                        this.rawKaryawan = data.karyawan || [];
+                    } catch (e) { alert("Error koneksi database"); }
+                    finally { 
+                        this.loading = false;
+                        this.$nextTick(() => lucide.createIcons());
+                    }
+                },
 
-        if (found) {
-            this.formData.Nama = found.nama;
-        } else {
-            this.formData.Nama = 'NIK TIDAK DITEMUKAN';
-        }
-    });
-},
+                lookupKaryawan(nik) {
+                    if (!nik) { this.form.Nama = ''; return; }
+                    const match = this.rawKaryawan.find(k => k.nik?.toString().trim() === nik.toString().trim());
+                    this.form.Nama = match ? match.nama : 'NIK TIDAK TERDAFTAR';
+                },
 
-        async loadData() {
-            this.isSyncing = true;
-            try {
-                const r = await fetch(`${SPREADSHEET_API}?t=${Date.now()}`);
-                const d = await r.json();
-                // Normalisasi status saat data masuk agar filter akurat
-                this.nearmiss = (d.nearmiss || []).map(item => ({ 
-                    ...item, 
-                    note: item.note || 'Belum Close', // Default jika kosong
-                    expanded: false 
-                }));
-                this.karyawan = d.karyawan || [];
-            } catch (e) { 
-                console.error("Error load data:", e); 
-            } finally { 
-                this.isSyncing = false; 
-                setTimeout(() => lucide.createIcons(), 100); 
-            }
-        },
+                triggerModal(item = null) {
+                    this.editing = !!item;
+                    if (item) {
+                        // Handle date for local input
+                        const dt = new Date(item.when);
+                        const localTime = new Date(dt.getTime() - (dt.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                        
+                        this.form = { 
+                            ...item, NIK: item.nik, Nama: item.nama, When: localTime, 
+                            originalWhen: item.when, note: item.note || 'Belum Close' 
+                        };
+                    } else {
+                        const now = new Date();
+                        const localNow = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                        this.form = { NIK: '', Nama: '', When: localNow, originalWhen: '', where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close' };
+                    }
+                    this.modal = true;
+                    this.$nextTick(() => lucide.createIcons());
+                },
 
-        formatDate(d) {
-            if (!d) return '-';
-            const date = new Date(d);
-            if (isNaN(date)) return d;
-            return date.toLocaleDateString('id-ID', { 
-                day: '2-digit', month: 'short', year: 'numeric', 
-                hour: '2-digit', minute: '2-digit' 
-            });
-        },
+                async handleSubmit() {
+                    if (this.form.Nama === 'NIK TIDAK TERDAFTAR') return alert("Cek kembali NIK Anda");
+                    this.loading = true;
+                    const payload = {
+                        action: this.editing ? 'updateNearmiss' : 'addNearmiss',
+                        data: { ...this.form },
+                        nik: this.form.NIK,
+                        when: this.form.originalWhen
+                    };
+                    try {
+                        const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                        if ((await r.json()).status === 'success') {
+                            this.modal = false;
+                            await this.fetchData();
+                        }
+                    } catch (e) { alert("Gagal menyimpan data"); }
+                    finally { this.loading = false; }
+                },
 
-        openForm() {
-            this.isEdit = false;
-            // Set waktu ke WITA/WIB saat ini untuk input HTML
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            
-            this.formData = { 
-                NIK: '', Nama: '', 
-                When: now.toISOString().slice(0, 16), 
-                originalWhen: '', 
-                where: '', detail: '', measure: '', tergetdate: '', note: 'Belum Close' 
-            };
-            this.showForm = true;
-        },
+                async handleDelete(nik, when) {
+                    if (!confirm("Hapus permanen laporan ini?")) return;
+                    this.loading = true;
+                    try {
+                        await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteNearmiss', nik, when }) });
+                        await this.fetchData();
+                    } catch (e) { alert("Gagal menghapus"); }
+                    finally { this.loading = false; }
+                },
 
-        editData(item) {
-    this.isEdit = true;
-    
-    // Simpan data asli untuk identifikasi baris saat update
-    const originalDate = item.when; 
+                prettyDate(str) {
+                    if (!str) return '-';
+                    const d = new Date(str);
+                    return isNaN(d) ? str : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                },
 
-    // Konversi tanggal untuk input HTML datetime-local
-    let whenFormatted = '';
-    if (item.when) {
-        const d = new Date(item.when);
-        if (!isNaN(d)) {
-            // Penyesuaian timezone agar waktu tidak bergeser di input form
-            const offset = d.getTimezoneOffset() * 60000;
-            const localISOTime = new Date(d - offset).toISOString().slice(0, 16);
-            whenFormatted = localISOTime;
-        }
-    }
+                get lines() {
+                    const l = this.rawKaryawan.map(k => k.line || k.Line).filter(Boolean);
+                    return [...new Set(l)].sort();
+                },
 
-    this.formData = {
-        NIK: item.nik,
-        Nama: item.nama,
-        When: whenFormatted,
-        originalWhen: originalDate, // ID PENTING: Jangan diubah agar backend bisa menemukan barisnya
-        where: item.where,
-        detail: item.detail,
-        measure: item.measure,
-        tergetdate: item.tergetdate ? new Date(item.tergetdate).toISOString().slice(0, 10) : '',
-        note: item.note || 'Belum Close'
-    };
+                get filteredData() {
+                    return this.rawNearmiss.filter(n => {
+                        const k = this.rawKaryawan.find(ky => ky.nik?.toString() === n.nik?.toString());
+                        const l = k ? (k.line || k.Line) : '-';
+                        const s = this.search.toLowerCase();
+                        
+                        const matchText = n.nama?.toLowerCase().includes(s) || n.nik?.toString().includes(s) || n.where?.toLowerCase().includes(s);
+                        const matchStatus = this.filterStatus === 'all' || (n.note === 'Close' ? 'Close' : 'Belum Close') === this.filterStatus;
+                        const matchLine = this.filterLine === 'all' || l === this.filterLine;
+                        
+                        return matchText && matchStatus && matchLine;
+                    });
+                },
 
-    this.showForm = true;
-    setTimeout(() => lucide.createIcons(), 50);
-},
-
-        async submitForm() {
-    // Validasi input Nama
-    if (!this.formData.Nama || this.formData.Nama === 'NIK TIDAK DITEMUKAN') {
-        return alert("NIK tidak valid!");
-    }
-    
-    this.isSyncing = true;
-    const action = this.isEdit ? 'updateNearmiss' : 'addNearmiss';
-    
-    // Siapkan payload yang bersih
-    // 'nik' dan 'when' (originalWhen) diletakkan di level utama agar mudah dibaca backend saat update
-    const payload = { 
-        action: action,
-        data: { ...this.formData },
-        nik: this.formData.NIK,
-        when: this.formData.originalWhen 
-    };
-
-    try {
-        const response = await fetch(SPREADSHEET_API, {
-            method: 'POST',
-            // mode: 'no-cors' DIHAPUS agar response.json() bisa berfungsi
-            body: JSON.stringify(payload)
-        });
-        
-        // Sekarang kita bisa membaca respon asli dari Google Apps Script
-        const resJson = await response.json();
-        
-        if (resJson.status === 'success') {
-            alert(resJson.message); // Memberi tahu pengguna data berhasil disimpan
-            this.showForm = false;
-            await this.loadData(); // Segarkan tampilan data
-        } else {
-            alert("Gagal: " + resJson.message);
-        }
-    } catch (e) { 
-        console.error("Error Detail:", e);
-        alert("Gagal terhubung ke server! Pastikan URL Web App sudah benar dan di-deploy sebagai 'Anyone'."); 
-    } finally { 
-        this.isSyncing = false; 
-    }
-},
-
-async deleteData(nik, when) {
-    if (!confirm("Apakah Anda yakin ingin menghapus laporan ini?")) return;
-    
-    this.isSyncing = true;
-    try {
-        const response = await fetch(SPREADSHEET_API, {
-            method: 'POST',
-            body: JSON.stringify({ 
-                action: 'deleteNearmiss', 
-                nik: nik, 
-                when: when // Menggunakan timestamp asli untuk pencarian baris
-            })
-        });
-        
-        const res = await response.json();
-        
-        if (res.status === 'success') {
-            alert("Data berhasil dihapus!");
-            await this.loadData();
-        } else {
-            alert("Gagal menghapus: " + res.message);
-        }
-    } catch (e) { 
-        console.error("Delete Error:", e);
-        alert("Gagal menghapus data! Periksa koneksi internet Anda."); 
-    } finally { 
-        this.isSyncing = false; 
-    }
-},
-
-        async deleteData(nik, when) {
-            if(!confirm("Hapus laporan ini?")) return;
-            this.isSyncing = true;
-            try {
-                const response = await fetch(SPREADSHEET_API, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'deleteNearmiss', nik, when })
-                });
-                const res = await response.json();
-                if(res.status === 'success') await this.loadData();
-            } catch (e) { alert("Gagal hapus data!"); }
-            finally { this.isSyncing = false; }
-        },
-
-        // Menampilkan daftar Line unik dari data karyawan yang ada
-        get uniqueLines() {
-            if (!this.karyawan) return [];
-            const lines = this.karyawan
-                .map(k => k.line || k.Line) // Sesuaikan dengan key di JSON (biasanya k.line)
-                .filter(l => l && l !== '-');
-            return [...new Set(lines)].sort();
-        },
-
-        get filteredNearmiss() {
-            return this.nearmiss.filter(n => {
-                // 1. Ambil data Line karyawan berdasarkan NIK pelapor
-                const karyawanPelapor = this.karyawan.find(k => 
-                    k.nik && k.nik.toString() === n.nik.toString()
-                );
-                const lineKaryawan = karyawanPelapor ? (karyawanPelapor.line || karyawanPelapor.Line) : '-';
-
-                // 2. Filter Pencarian Teks
-                const s = this.searchQuery.toLowerCase();
-                const matchText = (n.nama || '').toLowerCase().includes(s) || 
-                                  (n.nik || '').toString().includes(s) || 
-                                  (n.where || '').toLowerCase().includes(s);
-                
-                // 3. Filter Status (Open vs Closed)
-                const currentStatus = n.note === 'Close' ? 'Close' : 'Belum Close';
-                const matchStatus = this.currentFilter === 'all' || currentStatus === this.currentFilter;
-
-                // 4. Filter Line (BARU)
-                let matchLine = true;
-                if (this.filterLine !== 'all') {
-                    matchLine = lineKaryawan === this.filterLine;
+                logout() {
+                    if (confirm("Logout dari sistem?")) {
+                        localStorage.clear();
+                        window.location.replace("index.html");
+                    }
                 }
-                
-                return matchText && matchStatus && matchLine;
-            });
-        },
-
-       logout() {
-    if(confirm("Keluar dari aplikasi?")) {
-        localStorage.clear(); // Hapus role dan status login
-        window.location.replace("index.html"); // Gunakan replace
-    }
-}
-    }
-}
+            }
+        }
     </script>
 </body>
 </html>
